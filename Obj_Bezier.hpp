@@ -8,7 +8,7 @@ CANCELLED
 #include "Object.hpp"
 #include "BezierCurve.hpp"
 
-// FIXME: NOT COMPLETE
+
 class BezierSurface : public Object
 {
 private:
