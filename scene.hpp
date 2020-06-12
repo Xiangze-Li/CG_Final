@@ -37,7 +37,7 @@ Texture::Feature getFeature(Object *obj, const Texture &texture, Vec3 x)
     {
         auto objj = dynamic_cast<BezierSurface *>(obj);
         Vec3 tmp = objj->change_for_bezier(x);
-        feature = texture.getFeature(tmp.x() / 2 / PI + .5, tmp.y());
+        feature = texture.getFeature(tmp.x() / (2 * PI) + .5, tmp.y());
         if (rand01() < 0.2)
             feature.first = Texture::Reflect_t::SPEC;
     }

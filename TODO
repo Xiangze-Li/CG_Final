@@ -1,7 +1,7 @@
 I hope I can get at least B+ in CG
 
 Todo:
-    [ ] 用Bezier曲线构造Bezier旋转面 @low @est(6h) @created(20-06-11 10:02)
+    [ ] 用Bezier曲线构造Bezier旋转面 @low @est(6h) @created(20-06-11 10:02) @started(20-06-12 14:07)
     [ ] 设计场景 @low @est(3h) @created(20-06-11 10:02)
     [ ] 在求交过程中应用AABB(虽然只应该对Bezier曲面有实质改善) @last @created(20-06-11 12:52)
     [X] 主函数 @critical @created(20-06-12 08:00) @started(20-06-12 08:00) @done(20-06-12 09:52) @lasted(1h52m2s)

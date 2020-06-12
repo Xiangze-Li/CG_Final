@@ -7,7 +7,7 @@
 #include <vector>
 
 std::pair<int, double> findIntersect(const Ray &ray)
-// TODO: AABB
+// OPTIMIZE: AABB
 {
     double t = INF;
     int id = -1;
