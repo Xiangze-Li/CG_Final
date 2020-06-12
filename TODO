@@ -1,4 +1,5 @@
-[ ] @high 三角面片和 Mesh @created(20-06-12 17:03)
+[ ] @critical 用新的求交函数重构代码 @created(20-06-12 19:06)
+[ ] @high Mesh @created(20-06-12 17:03)
 [ ] @high 从 *.obj 文件中读取 Mesh @created(20-06-12 17:09)
 [ ] 在Mesh内部实现AABB加速 @created(20-06-12 17:08)
 [ ] 更改相机的实现方式 (硬实现 -> 软实现) @created(20-06-12 17:05)
@@ -9,4 +10,5 @@
 [X] @critical SPPM算法 @est(12h) @created(20-06-11 10:02) @started(20-06-11 15:30) @done(20-06-11 16:51) @lasted(1h21m31s)
 [X] @high k-D tree @est(6h) @started(20-06-11 07:00) @done(20-06-11 10:01) @lasted(3h1m)
 [X] @low 给每种材质贴图写适配器 @est(2h) @created(20-06-11 10:02) @done(20-06-12 07:36)
+[X] 三角形 @created(20-06-12 17:03) @started(20-06-12 18:05) @done(20-06-12 19:06) @lasted(1h1m5s)
 [-] @low 用Bezier曲线构造Bezier旋转面 @est(6h) @created(20-06-11 10:02) @started(20-06-12 14:07) @cancelled(20-06-12 17:03) @wasted(2h56m)

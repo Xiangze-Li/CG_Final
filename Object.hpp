@@ -3,22 +3,23 @@
 #include "utils.hpp"
 #include "Texture.hpp"
 #include "Ray.hpp"
-#include <string>
+#include "Hit.hpp"
 
 class Object
 {
-private:
-    Texture _texture;
+protected:
+    Texture* _texture;
 
 public:
-    Object(const Texture &texture) : _texture(texture) {}
+    Object() : _texture(nullptr) {}
+    explicit Object(Texture *texture) : _texture(texture) {}
 
-    virtual double intersect(const Ray &) const = 0;
+    virtual bool intersect(const Ray &, Hit&) const = 0;
     virtual std::pair<Vec3, Vec3> AABB() const = 0;
-    virtual Vec3 norm(const Vec3 &) const = 0;
 
-    const Texture &texture() const { return _texture; }
+    Texture *texture() const { return _texture; }
 };
 
 #include "Obj_Geometry.hpp"
+#include "Obj_Mesh.hpp"
 // #include "Obj_Bezier.hpp" CANCELLED

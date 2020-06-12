@@ -5,9 +5,7 @@
 #include <vector>
 #include <algorithm>
 
-// double intersect(const Ray &ray) const override {}
-// std::pair<Vec3, Vec3> AABB() const override {}
-// Vec3 norm(const Vec3 &p) const override {}
+// bool intersect(const Ray &ray, Hit &hit) const override
 
 class Sphere : public Object
 {
@@ -16,35 +14,27 @@ private:
     double _radius;
 
 public:
-    Sphere(const Texture &texture, const Vec3 &center, const double &radius) : Object(texture), _center(center), _radius(radius) {}
+    Sphere(const Vec3 &center, const double &radius, Texture *texture) : Object(texture), _center(center), _radius(radius) {}
 
-    double intersect(const Ray &ray) const override
+    bool intersect(const Ray &ray, Hit &hit) const override
     {
-        Vec3 RO = _center - ray.ori();
-        double b = ray.dir().dot(RO);
-        double d = sqr(b) - RO.dot(RO) + sqr(_radius);
+        Vec3 vec_OC = _center - ray.ori();
+        double len_OH = ray.dir().normalized().dot(vec_OC);
+        if (len_OH < 0)
+            return false;
+        double len_CH = sqrt(vec_OC.squaredLen() - sqr(len_OH));
+        if (len_CH > _radius)
+            return false;
+        double len_PH = sqrt(sqr(_radius) - sqr(len_CH));
+        double tt = (len_OH - len_PH) / ray.dir().len();
+        if (tt > hit.t())
+            return false;
 
-        if (d < 0)
-            return INF;
-        else
-            d = sqrt(d);
-
-        double t = (b - d > eps ? b - d : (b + d > eps ? b + d : -1.));
-
-        if (t < 0)
-            return INF;
-        else
-            return t;
+        return hit.set(tt, _texture, (ray.pointAt(tt) - _center).normalized());
     }
     std::pair<Vec3, Vec3> AABB() const override
     {
         return std::make_pair(_center - Vec3(_radius), _center + Vec3(_radius));
-    }
-    Vec3 norm(const Vec3 &p) const override
-    {
-        if (abs((p - _center).len() - _radius) > eps)
-            throw "Bad Query: Queried normal with point not on surface";
-        return (p - _center).normalized();
     }
 };
 
@@ -56,17 +46,22 @@ private:
     double _d;
 
 public:
-    Plane(const Texture &texture, const Vec3 &normal, const double &d)
+    Plane(const Vec3 &normal, const double &d, Texture *texture)
         : Object(texture), _normal(normal), _d(d) {}
 
-    double intersect(const Ray &ray) const override
+    bool intersect(const Ray &ray, Hit &hit) const override
     {
         double rr = Vec3::dot(_normal, ray.dir());
 
         if (abs(rr) < eps)
-            return INF;
-        else
-            return ((_d - rr) / rr);
+            return false;
+
+        double tt = ((_d - rr) / rr);
+
+        if (tt < 0 || tt >= hit.t())
+            return false;
+
+        return hit.set(tt, _texture, _normal.normalized());
     }
     std::pair<Vec3, Vec3> AABB() const override
     {
@@ -90,12 +85,6 @@ public:
 
         return std::make_pair(p0, p1);
     }
-    Vec3 norm(const Vec3 &p) const override
-    {
-        if (abs(_normal.dot(p) + _d) > eps)
-            throw "Bad Query: Queried normal with point not on surface";
-        return _normal.normalized();
-    }
 };
 
 // Cubic objects whose edges are PARALLEL to axies (axis-aligned)
@@ -111,7 +100,7 @@ private:
     }
 
 public:
-    Cube(const Texture &texture, const Vec3 &p0, const Vec3 &p1)
+    Cube(const Vec3 &p0, const Vec3 &p1, Texture *texture)
         : Object(texture)
     {
         _p0 = Vec3::mergeMin(p0, p1);
@@ -119,7 +108,7 @@ public:
     }
 
     // Slab-based algorithm for box
-    double intersect(const Ray &ray) const override
+    bool intersect(const Ray &ray, Hit &hit) const override
     {
         // FIXME: this function will return INF when the ray is axis-align, even if there is accully an intersection.
         /*
@@ -150,22 +139,75 @@ public:
         far.emplace_back((t_0y < t_1y ? t_1y : t_0y));
         far.emplace_back((t_0z < t_1z ? t_1z : t_0z));
 
-        double tNear = *std::max_element(near.begin(), near.end());
         double tFar = *std::min_element(far.begin(), far.end());
+        auto idxNear = std::max_element(near.begin(), near.end()) - near.begin();
+        double tNear = near[idxNear];
+        // return ((tFar - tNear > eps) ? tNear : INF);
+        if (tFar - tNear < eps || tNear < 0 || tNear >= hit.t())
+            return false;
 
-        return ((tFar - tNear > eps) ? tNear : INF);
+        Vec3 norm;
+        if (idxNear == 0)
+        {
+            if (abs(ray.pointAt(tNear).x() - _p0.x()) < eps)
+                norm = Vec3(-1, 0, 0);
+            else
+                norm = Vec3(1, 0, 0);
+        }
+        else if (idxNear == 1)
+        {
+            if (abs(ray.pointAt(tNear).y() - _p0.y()) < eps)
+                norm = Vec3(0, -1, 0);
+            else
+                norm = Vec3(0, 1, 0);
+        }
+        else if (idxNear == 2)
+        {
+            if (abs(ray.pointAt(tNear).z() - _p0.z()) < eps)
+                norm = Vec3(0, 0, -1);
+            else
+                norm = Vec3(0, 0, 1);
+        }
+
+        return hit.set(tNear, _texture, norm);
     }
     std::pair<Vec3, Vec3> AABB() const override { return std::make_pair(_p0, _p1); }
-    Vec3 norm(const Vec3 &p) const override
+};
+
+class Triangle : public Object
+{
+private:
+    Vec3 _vtx[3], _normal;
+    double _d;
+    bool inside(const Vec3 &P) const
     {
-        using std::min;
-        if (abs(p.x() - _p0.x()) < eps || abs(p.x() - _p1.x() < eps))
-            return Vec3((abs(p.x() - min(_p0.x(), _p1.x())) < eps ? -1. : 1.), 0., 0.);
-        else if (abs(p.y() - _p0.y()) < eps || abs(p.y() - _p1.y() < eps))
-            return Vec3(0., (abs(p.y() - min(_p0.y(), _p1.y())) < eps ? -1. : 1.), 0.);
-        else if (abs(p.z() - _p0.z()) < eps || abs(p.z() - _p1.z() < eps))
-            return Vec3(0., 0., (abs(p.z() - min(_p0.z(), _p1.z())) < eps ? -1. : 1.));
+        return (_normal.dot(Vec3::cross(_vtx[0] - P, _vtx[1] - P)) > 0 &&
+                _normal.dot(Vec3::cross(_vtx[1] - P, _vtx[2] - P)) > 0 &&
+                _normal.dot(Vec3::cross(_vtx[2] - P, _vtx[0] - P)) > 0);
+    }
+
+public:
+    Triangle(const Vec3 &a, const Vec3 &b, const Vec3 &c, Texture *texture)
+        : Object(texture), _vtx{a, b, c}
+    {
+        _normal = Vec3::cross(b - a, c - a).normalized();
+        _d = -_normal.dot(a);
+    }
+    bool intersect(const Ray &ray, Hit &hit) const override
+    {
+        double rr = Vec3::dot(_normal, ray.dir());
+
+        if (abs(rr) < eps)
+            return false;
+
+        double tt = ((_d - rr) / rr);
+
+        if (tt < 0 || tt >= hit.t())
+            return false;
+
+        if (inside(ray.pointAt(tt)))
+            return hit.set(tt, _texture, _normal);
         else
-            throw "Bad Query: Queried normal with point not on surface";
+            return false;
     }
 };
