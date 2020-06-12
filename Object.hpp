@@ -21,4 +21,4 @@ public:
 };
 
 #include "Obj_Geometry.hpp"
-#include "Obj_Bezier.hpp"
+// #include "Obj_Bezier.hpp" CANCELLED
