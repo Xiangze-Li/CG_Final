@@ -104,27 +104,42 @@ class Cube : public Object
 {
 private:
     Vec3 _p0, _p1;
+    double getPlaneIntersect(const Ray &ray, const Vec3 &pln_N, double pln_d) const
+    {
+        double rr = Vec3::dot(pln_N, ray.dir());
+        return ((pln_d - rr) / rr);
+    }
 
 public:
     Cube(const Texture &texture, const Vec3 &p0, const Vec3 &p1)
-        : Object(texture), _p0(p0), _p1(p1) {}
+        : Object(texture)
+    {
+        _p0 = Vec3::mergeMin(p0, p1);
+        _p1 = Vec3::mergeMax(p0, p1);
+    }
 
     // Slab-based algorithm for box
     double intersect(const Ray &ray) const override
     {
-        Plane pl_0x(Texture(), Vec3(1., 0., 0.), -_p0.x());
-        Plane pl_1x(Texture(), Vec3(1., 0., 0.), -_p1.x());
-        Plane pl_0y(Texture(), Vec3(0., 1., 0.), -_p0.y());
-        Plane pl_1y(Texture(), Vec3(0., 1., 0.), -_p1.y());
-        Plane pl_0z(Texture(), Vec3(0., 0., 1.), -_p0.z());
-        Plane pl_1z(Texture(), Vec3(0., 0., 1.), -_p1.z());
+        // FIXME: this function will return INF when the ray is axis-align, even if there is accully an intersection.
+        /*
+        if (abs(ray.dir().x()) < eps && abs(ray.dir().y()) < eps)
+        {
+        }
+        else if (abs(ray.dir().x()) < eps && abs(ray.dir().z()) < eps)
+        {
+        }
+        else if (abs(ray.dir().y()) < eps && abs(ray.dir().z()) < eps)
+        {
+        }
+        */
 
-        double t_0x = pl_0x.intersect(ray);
-        double t_0y = pl_0y.intersect(ray);
-        double t_0z = pl_0z.intersect(ray);
-        double t_1x = pl_1x.intersect(ray);
-        double t_1y = pl_1y.intersect(ray);
-        double t_1z = pl_1z.intersect(ray);
+        double t_0x = getPlaneIntersect(ray, Vec3(1, 0, 0), -_p0.x());
+        double t_1x = getPlaneIntersect(ray, Vec3(1, 0, 0), -_p1.x());
+        double t_0y = getPlaneIntersect(ray, Vec3(0, 1, 0), -_p0.y());
+        double t_1y = getPlaneIntersect(ray, Vec3(0, 1, 0), -_p1.y());
+        double t_0z = getPlaneIntersect(ray, Vec3(0, 0, 1), -_p0.z());
+        double t_1z = getPlaneIntersect(ray, Vec3(0, 0, 1), -_p1.z());
 
         std::vector<double> near, far;
 
