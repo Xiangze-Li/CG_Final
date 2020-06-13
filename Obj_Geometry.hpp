@@ -6,6 +6,7 @@
 #include <algorithm>
 
 // bool intersect(const Ray &ray, Hit &hit) const override
+// std::pair<Vec3, Vec3> AABB() const override
 
 class Sphere : public Object
 {
@@ -178,6 +179,7 @@ class Triangle : public Object
 {
 private:
     Vec3 _vtx[3], _normal;
+    Vec3 _aabb[2];
     double _d;
     bool inside(const Vec3 &P) const
     {
@@ -192,7 +194,10 @@ public:
     {
         _normal = Vec3::cross(b - a, c - a).normalized();
         _d = -_normal.dot(a);
+        _aabb[0] = Vec3::mergeMin(a, Vec3::mergeMin(b, c)) - Vec3(eps);
+        _aabb[1] = Vec3::mergeMax(a, Vec3::mergeMax(b, c)) + Vec3(eps);
     }
+
     bool intersect(const Ray &ray, Hit &hit) const override
     {
         double rr = Vec3::dot(_normal, ray.dir());
@@ -209,5 +214,10 @@ public:
             return hit.set(tt, _texture, _normal);
         else
             return false;
+    }
+
+    std::pair<Vec3, Vec3> AABB() const override
+    {
+        return std::make_pair(_aabb[0], _aabb[1]);
     }
 };
