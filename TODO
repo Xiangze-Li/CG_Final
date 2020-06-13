@@ -1,4 +1,4 @@
-[ ] @critical 用新的求交函数重构 `Render.hpp` 代码 @created(20-06-12 19:06)
+[ ] @critical 用新的求交函数重构 `Render.hpp` 代码 @created(20-06-12 19:06) @started(20-06-13 14:28)
 [ ] @critical 在Mesh内部实现AABB加速 @created(20-06-12 17:08)
 [ ] 更改相机的实现方式 (硬实现 -> 软实现) @created(20-06-12 17:05)
 [ ] 从文件中读取场景 @created(20-06-12 17:09)

@@ -1,4 +1,4 @@
-#include "Render.hpp"
+#include "SPPM.hpp"
 #include "Image.hpp"
 #include "Ray.hpp"
 #include <omp.h>
@@ -8,26 +8,28 @@
 #include <iostream>
 #include <vector>
 
+using std::cerr;
+using std::cout;
+using std::endl;
+
 int main(int argc, char **argv)
 {
-    return SPPM(argc, argv);
-}
-
-int SPPM(int argc, char **argv)
-{
-    using std::cerr;
-    using std::cout;
-    using std::endl;
-    if (argc != 9)
+    if (argc != 7)
     {
         cout << "Usage: \n\n"
-             << "\t<EXCUTABLE> filename width height iter sample radius alpha aperture\n"
+             << "\t<EXCUTABLE> filename iter sample radius alpha aperture\n"
              << endl;
     }
     std::string FILENAME = argv[1];
-    int WIDTH = atoi(argv[2]), HEIGHT = atoi(argv[3]), ITER = atoi(argv[4]);
-    double SAMPLE = atof(argv[5]) * WIDTH * HEIGHT, RADIUS = atof(argv[6]),
-           ALPHA = atof(argv[7]), APERTURE = atof(argv[8]);
+    int ITER = atoi(argv[2]);
+    double SAMPLE = atof(argv[3]), RADIUS = atof(argv[4]),
+           ALPHA = atof(argv[5]), APERTURE = atof(argv[6]);
+
+    int WIDTH, HEIGHT;
+    Object *scene = nullptr;
+    // TODO: SceneParser shoule behave like below
+    // SceneParser sp(FILENAME);
+    // Object *scene = sp.parse(WIDTH, HEIGHT);
 
     int nth = omp_get_num_procs();
     IMGbuffer **imgBuff = new IMGbuffer *[nth];
@@ -66,7 +68,7 @@ int SPPM(int argc, char **argv)
                             Vec3 dir = camX * ((dx / 2. + x + subX) / WIDTH - 0.5) +
                                        camY * ((dy / 2. + y + subY) / HEIGHT - 0.5) + camera.dir();
                             Vec3 pp = camera.ori() + dir * 150., loc = camera.ori() + (Vec3(rand01() * 1.05, rand01() - .5, 0.) * 2 * APERTURE);
-                            std::vector<SPPMNode> tmp = sppmBacktrace(Ray(pp, (loc - pp).normalized()), 0, y * WIDTH + x);
+                            std::vector<SPPMNode> tmp = sppmBacktrace(scene, Ray(pp, (loc - pp).normalized()), 0, y * WIDTH + x);
                             for (auto &nn : tmp)
                                 if (nn.index > 0)
                                 {
@@ -103,7 +105,7 @@ int SPPM(int argc, char **argv)
                 Ray light = Ray(o, d);
                 Vec3 col = Vec3(1, 1, 1) + .4;
                 tree.query(SPPMNode(o, col, d), imgBuff[threadNo]);
-                sppmForward(light, 0, col, imgBuff[threadNo], &tree);
+                sppmForward(scene, light, 0, col, imgBuff[threadNo], &tree);
             }
         }
 
