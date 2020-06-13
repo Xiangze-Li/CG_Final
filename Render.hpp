@@ -1,3 +1,5 @@
+// FIXME: 需要使用新的交点返回方式重构求交
+// FIXME: 需要加入传入场景 Object 的参数
 #pragma once
 
 #include "Texture.hpp"
