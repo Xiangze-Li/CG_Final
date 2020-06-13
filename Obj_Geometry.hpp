@@ -111,60 +111,89 @@ public:
     // Slab-based algorithm for box
     bool intersect(const Ray &ray, Hit &hit) const override
     {
-        // FIXME: this function will return INF when the ray is axis-align, even if there is accully an intersection.
-        /*
-        if (abs(ray.dir().x()) < eps && abs(ray.dir().y()) < eps)
+        double Ox = ray.ori().x(), Oy = ray.ori().y(), Oz = ray.ori().z();
+        double Dx = ray.dir().x(), Dy = ray.dir().y(), Dz = ray.dir().z();
+
+        double t_x0, t_x1, t_y0, t_y1, t_z0, t_z1;
+        double near[3], far[3];
+        bool closer[3];
+
+        if (abs(Dx) < eps)
         {
+            if (Ox < _p0.x() || _p1.x() < Ox)
+                return false;
+
+            near[0] = -INF;
+            far[0] = INF;
         }
-        else if (abs(ray.dir().x()) < eps && abs(ray.dir().z()) < eps)
+        else
         {
+            t_x0 = (_p0.x() - Ox) / Dx;
+            t_x1 = (_p1.x() - Ox) / Dx;
+            near[0] = ((t_x0 < t_x1 ? t_x0 : t_x1));
+            far[0] = ((t_x0 < t_x1 ? t_x1 : t_x0));
+            closer[0] = (t_x0 < t_x1 ? true : false);
         }
-        else if (abs(ray.dir().y()) < eps && abs(ray.dir().z()) < eps)
+
+        if (abs(Dy) < eps)
         {
+            if (Oy < _p0.y() || _p1.y() < Oy)
+                return false;
+
+            near[1] = -INF;
+            far[1] = INF;
         }
-        */
+        else
+        {
+            t_y0 = (_p0.y() - Oy) / Dy;
+            t_y1 = (_p1.y() - Oy) / Dy;
+            near[1] = ((t_y0 < t_y1 ? t_y0 : t_y1));
+            far[1] = ((t_y0 < t_y1 ? t_y1 : t_y0));
+            closer[1] = (t_y0 < t_y1 ? true : false);
+        }
 
-        double t_0x = getPlaneIntersect(ray, Vec3(1, 0, 0), -_p0.x());
-        double t_1x = getPlaneIntersect(ray, Vec3(1, 0, 0), -_p1.x());
-        double t_0y = getPlaneIntersect(ray, Vec3(0, 1, 0), -_p0.y());
-        double t_1y = getPlaneIntersect(ray, Vec3(0, 1, 0), -_p1.y());
-        double t_0z = getPlaneIntersect(ray, Vec3(0, 0, 1), -_p0.z());
-        double t_1z = getPlaneIntersect(ray, Vec3(0, 0, 1), -_p1.z());
+        if (abs(Dz) < eps)
+        {
+            if (Oz < _p0.z() || _p1.z() < Oz)
+                return false;
 
-        std::vector<double> near, far;
+            near[2] = -INF;
+            far[2] = INF;
+        }
+        else
+        {
+            t_z0 = (_p0.z() - Oz) / Dz;
+            t_z1 = (_p1.z() - Oz) / Dz;
+            near[2] = ((t_z0 < t_z1 ? t_z0 : t_z1));
+            far[2] = ((t_z0 < t_z1 ? t_z1 : t_z0));
+            closer[2] = (t_z0 < t_z1 ? true : false);
+        }
 
-        near.emplace_back((t_0x < t_1x ? t_0x : t_1x));
-        near.emplace_back((t_0y < t_1y ? t_0y : t_1y));
-        near.emplace_back((t_0z < t_1z ? t_0z : t_1z));
-        far.emplace_back((t_0x < t_1x ? t_1x : t_0x));
-        far.emplace_back((t_0y < t_1y ? t_1y : t_0y));
-        far.emplace_back((t_0z < t_1z ? t_1z : t_0z));
-
-        double tFar = *std::min_element(far.begin(), far.end());
-        auto idxNear = std::max_element(near.begin(), near.end()) - near.begin();
+        double tFar = *std::min_element(far, far + 2);
+        int idxNear = std::max_element(near, near + 2) - near;
         double tNear = near[idxNear];
-        // return ((tFar - tNear > eps) ? tNear : INF);
+
         if (tFar - tNear < eps || tNear < 0 || tNear >= hit.t())
             return false;
 
         Vec3 norm;
         if (idxNear == 0)
         {
-            if (abs(ray.pointAt(tNear).x() - _p0.x()) < eps)
+            if (closer[0])
                 norm = Vec3(-1, 0, 0);
             else
                 norm = Vec3(1, 0, 0);
         }
         else if (idxNear == 1)
         {
-            if (abs(ray.pointAt(tNear).y() - _p0.y()) < eps)
+            if (closer[1])
                 norm = Vec3(0, -1, 0);
             else
                 norm = Vec3(0, 1, 0);
         }
         else if (idxNear == 2)
         {
-            if (abs(ray.pointAt(tNear).z() - _p0.z()) < eps)
+            if (closer[2])
                 norm = Vec3(0, 0, -1);
             else
                 norm = Vec3(0, 0, 1);
@@ -172,6 +201,7 @@ public:
 
         return hit.set(tNear, _texture, norm);
     }
+
     std::pair<Vec3, Vec3> AABB() const override { return std::make_pair(_p0, _p1); }
 };
 
