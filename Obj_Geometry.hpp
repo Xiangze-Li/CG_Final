@@ -35,7 +35,7 @@ public:
     }
     std::pair<Vec3, Vec3> AABB() const override
     {
-        return std::make_pair(_center - Vec3(_radius), _center + Vec3(_radius));
+        return std::make_pair(_center - Vec3(_radius + eps), _center + Vec3(_radius + eps));
     }
 };
 
@@ -202,7 +202,7 @@ public:
         return hit.set(tNear, _texture, norm);
     }
 
-    std::pair<Vec3, Vec3> AABB() const override { return std::make_pair(_p0, _p1); }
+    std::pair<Vec3, Vec3> AABB() const override { return std::make_pair(_p0 - Vec3(eps), _p1 + Vec3(eps)); }
 };
 
 class Triangle : public Object
