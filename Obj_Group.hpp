@@ -1,67 +1,35 @@
 #pragma once
 
-#include "Object.hpp"
+#include "Obj_BVH.hpp"
 #include <vector>
 #include <algorithm>
 #include <Vec3.hpp>
 
-class ObjGroup : public Object
+class ObjGroup : public BVH_Node
 {
 private:
-    std::vector<Object *> _items;
-    Vec3 _aabb[2];
+    // std::vector<Object *> _items;
+
+    Object *const *_objs;
+    size_t _size;
 
 public:
-    ObjGroup() = default;
-    explicit ObjGroup(size_t size) : Object(), _items(std::vector<Object *>(size, nullptr)) {}
+    ObjGroup(Object *const *objs, size_t size) : BVH_Node(objs, size), _objs(objs), _size(size) {}
     ~ObjGroup()
     {
-        for (auto &ii : _items)
-            if (ii)
-                delete ii;
+        for (size_t i = 0; i < _size; i++)
+            delete _objs[i];
     }
 
     bool intersect(const Ray &ray, Hit &hit) const override
     {
-        // OPTIMIZE: AABB acceleration
-        bool result = false;
-
-        for (const auto &ii : _items)
-            result |= ii->intersect(ray, hit);
-
-        return result;
+        return BVH_Node::intersect(ray, hit);
     }
 
-    std::pair<Vec3, Vec3> AABB() const override
+    AABBcord AABB() const override
     {
-        return std::make_pair(_aabb[0], _aabb[1]);
+        return BVH_Node::AABB();
     }
 
-    bool add(size_t index, Object *obj)
-    {
-        if (index >= _items.size())
-            return false;
-
-        if (_items[index])
-            return false;
-
-        _items[index] = obj;
-        auto bb = obj->AABB();
-        _aabb[0] = Vec3::mergeMin(_aabb[0], bb.first);
-        _aabb[1] = Vec3::mergeMax(_aabb[1], bb.second);
-        return true;
-    }
-
-    bool add(Object *obj)
-    {
-        _items.push_back(obj);
-        auto bb = obj->AABB();
-        _aabb[0] = Vec3::mergeMin(_aabb[0], bb.first);
-        _aabb[1] = Vec3::mergeMin(_aabb[1], bb.second);
-        return true;
-    }
-
-    size_t size() const { return _items.size(); }
-
-    // void buildBVH()
+    size_t size() const { return _size; }
 };

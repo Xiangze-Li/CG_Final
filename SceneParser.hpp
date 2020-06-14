@@ -20,14 +20,7 @@ public:
                 const std::vector<Object *> &objects,
                 const Vec3 &backgroundColor)
         : _camera(camera), _lights(lights), _bgColor(backgroundColor),
-          _group(ObjGroup(objects.size()))
-    {
-        for (size_t i = 0; i < objects.size(); i++)
-            _group.add(objects[i]);
-        // TODO: if ObjGroup BVH had been implied,
-        // it should be like below.
-        // _group->buildBVH();
-    }
+          _group(objects.data(), objects.size()) {}
     SceneParser(const SceneParser &) = delete;
     SceneParser(SceneParser &&) = delete;
 

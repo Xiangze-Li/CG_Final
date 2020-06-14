@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Texture.hpp"
-#include "scene.hpp"
 #include "KDtree.hpp"
+#include "Object.hpp"
 #include <utility>
 #include <vector>
 

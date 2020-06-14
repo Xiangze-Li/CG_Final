@@ -9,45 +9,42 @@
 
 class Mesh : public Object
 {
-    struct TriangleIndex
-    {
-        int v[3];
-        TriangleIndex() : v{0, 0, 0} {}
-        TriangleIndex(int a, int b, int c) : v{a, b, c} {}
-        int &operator[](const int &id) { return v[id]; }
-        const int &operator[](const int &id) const { return v[id]; }
-    };
-
 private:
-    std::vector<Vec3> _vtxs;
-    std::vector<TriangleIndex> _triangles;
-    std::vector<Vec3> _normals;
-    Vec3 _aabb[2];
+    std::vector<Object *> _triangles;
+    BVH_Node *bvhTree;
 
-    void computeNormals()
-    {
-        _normals.resize(_triangles.size());
-        for (size_t id = 0; id < _triangles.size(); id++)
-        {
-            auto &tri = _triangles[id];
-            Vec3 a = _vtxs[tri[1]] - _vtxs[tri[0]];
-            Vec3 b = _vtxs[tri[2]] - _vtxs[tri[0]];
-            _normals[id] = Vec3::cross(a, b).normalized();
-        }
-    }
+    inline void loadFromFile(const char *filename);
 
 public:
-    inline Mesh(const char *filename, Texture *texture);
+    Mesh(const char *filename, Texture *texture)
+    {
+        loadFromFile(filename);
+        bvhTree = new BVH_Node(_triangles.data(), _triangles.size());
+    }
+    ~Mesh()
+    {
+        for (auto& i:_triangles)
+            delete i;
+    }
 
-    inline bool intersect(const Ray &, Hit &) const override;
+    bool intersect(const Ray &ray, Hit &hit) const override { return bvhTree->intersect(ray, hit); }
 
-    // @return GUARANTEE that first.x/y/z < second.x/y/z  respectively.
-    std::pair<Vec3, Vec3> AABB() const override { return std::make_pair(_aabb[1], _aabb[2]); }
+    AABBcord AABB() const override { return bvhTree->AABB(); }
 };
 
-inline Mesh::Mesh(const char *filename, Texture *texture) : Object(texture)
+/* inline bool Mesh::intersect(const Ray &ray, Hit &hit) const
 {
-    // Optional: Use tiny obj loader to replace this simple one.
+    // OPTIMIZE: Acceleration
+    bool result = false;
+    for (const auto &tri : _triangles)
+    {
+        result |= tri->intersect(ray, hit);
+    }
+    return result;
+}
+ */
+inline void Mesh::loadFromFile(const char *filename)
+{
     std::ifstream f;
     f.open(filename);
     if (!f.is_open())
@@ -62,6 +59,7 @@ inline Mesh::Mesh(const char *filename, Texture *texture) : Object(texture)
     char bslash = '/', space = ' ';
     std::string tok;
     int texID;
+    std::vector<Vec3> _vtxs;
     while (true)
     {
         std::getline(f, line);
@@ -81,11 +79,9 @@ inline Mesh::Mesh(const char *filename, Texture *texture) : Object(texture)
         ss >> tok;
         if (tok == vTok)
         {
-            Vec3 vec;
+            double vec[3];
             ss >> vec[0] >> vec[1] >> vec[2];
-            _aabb[0] = Vec3::mergeMin(_aabb[0], vec);
-            _aabb[1] = Vec3::mergeMax(_aabb[1], vec);
-            _vtxs.push_back(vec);
+            _vtxs.emplace_back(vec[0], vec[1], vec[2]);
         }
         else if (tok == fTok)
         {
@@ -93,24 +89,24 @@ inline Mesh::Mesh(const char *filename, Texture *texture) : Object(texture)
             {
                 std::replace(line.begin(), line.end(), bslash, space);
                 std::stringstream facess(line);
-                TriangleIndex trig;
+                int trig[3];
                 facess >> tok;
                 for (int ii = 0; ii < 3; ii++)
                 {
                     facess >> trig[ii] >> texID;
                     trig[ii]--;
                 }
-                _triangles.push_back(trig);
+                _triangles.push_back(new Triangle(_vtxs[trig[0]], _vtxs[trig[1]], _vtxs[trig[2]], _texture));
             }
             else
             {
-                TriangleIndex trig;
+                int trig[3];
                 for (int ii = 0; ii < 3; ii++)
                 {
                     ss >> trig[ii];
                     trig[ii]--;
                 }
-                _triangles.push_back(trig);
+                _triangles.push_back(new Triangle(_vtxs[trig[0]], _vtxs[trig[1]], _vtxs[trig[2]], _texture));
             }
         }
         else if (tok == texTok)
@@ -122,21 +118,5 @@ inline Mesh::Mesh(const char *filename, Texture *texture) : Object(texture)
         }
     }
 
-    computeNormals();
-
     f.close();
-}
-
-inline bool Mesh::intersect(const Ray &ray, Hit &hit) const
-{
-    // OPTIMIZE: Acceleration
-    bool result = false;
-    for (int triId = 0; triId < (int)_triangles.size(); ++triId)
-    {
-        const TriangleIndex &triIndex = _triangles[triId];
-        Triangle triangle(_vtxs[triIndex[0]],
-                          _vtxs[triIndex[1]], _vtxs[triIndex[2]], _texture);
-        result |= triangle.intersect(ray, hit);
-    }
-    return result;
 }

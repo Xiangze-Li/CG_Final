@@ -33,9 +33,9 @@ public:
 
         return hit.set(tt, _texture, (ray.pointAt(tt) - _center).normalized());
     }
-    std::pair<Vec3, Vec3> AABB() const override
+    AABBcord AABB() const override
     {
-        return std::make_pair(_center - Vec3(_radius + eps), _center + Vec3(_radius + eps));
+        return std::make_tuple(_center - Vec3(_radius + eps), _center + Vec3(_radius + eps), _center);
     }
 };
 
@@ -64,7 +64,7 @@ public:
 
         return hit.set(tt, _texture, _normal.normalized());
     }
-    std::pair<Vec3, Vec3> AABB() const override
+    AABBcord AABB() const override
     {
         Vec3 p0(-10000.0), p1(10000.0);
 
@@ -84,7 +84,7 @@ public:
             p1.x() = -(_d / _normal.x()) + eps;
         }
 
-        return std::make_pair(p0, p1);
+        return std::make_tuple(p0, p1, (p0 + p1) / 2.);
     }
 };
 
@@ -202,7 +202,7 @@ public:
         return hit.set(tNear, _texture, norm);
     }
 
-    std::pair<Vec3, Vec3> AABB() const override { return std::make_pair(_p0 - Vec3(eps), _p1 + Vec3(eps)); }
+    AABBcord AABB() const override { return std::make_tuple(_p0 - Vec3(eps), _p1 + Vec3(eps), (_p0 + _p1) / 2.); }
 };
 
 class Triangle : public Object
@@ -246,8 +246,8 @@ public:
             return false;
     }
 
-    std::pair<Vec3, Vec3> AABB() const override
+    AABBcord AABB() const override
     {
-        return std::make_pair(_aabb[0], _aabb[1]);
+        return std::make_tuple(_aabb[0], _aabb[1], (_aabb[0] + _aabb[1]) / 2.);
     }
 };

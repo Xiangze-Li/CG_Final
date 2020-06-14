@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <tuple>
 #include <algorithm>
 
 class Vec3
@@ -160,3 +161,5 @@ public:
 
     double L_inf() const { return (_x > _y && _x > _z ? _x : (_y > _z ? _y : _z)); }
 };
+
+using AABBcord = std::tuple<Vec3, Vec3, Vec3>;
