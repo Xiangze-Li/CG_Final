@@ -29,11 +29,13 @@ private:
     }
 
 public:
+    // @param: angleX should be given in **degree(s)**
     Camera(const Vec3 &center, const Vec3 &dir, const Vec3 &up, double angleX, int width, int height, double aperture)
         : _center(center), _dir(dir.normalized()),
           _right(_dir.cross(up).normalized()),
           _width(width), _height(height), _aperture(aperture)
     {
+        angleX = (angleX / 360.) * 2 * PI;
         _up = _right.cross(_dir).normalized();
         _dist = (_width / 2.) / tan(angleX / 2.);
         buildRevArray();
