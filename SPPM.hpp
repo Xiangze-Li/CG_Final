@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-std::vector<SPPMNode> sppmBacktrace(Object *scene, const Ray &ray, int depth, int index, Vec3 prevColor = Vec3(1.), double prob = 1.)
+std::vector<SPPMNode> sppmBacktrace(const Object *scene, const Ray &ray, int depth, int index, Vec3 prevColor = Vec3(1.), double prob = 1.)
 {
     std::vector<SPPMNode> result;
 
@@ -94,7 +94,7 @@ std::vector<SPPMNode> sppmBacktrace(Object *scene, const Ray &ray, int depth, in
     return result;
 }
 
-void sppmForward(Object *scene, const Ray &ray, int depth, const Vec3 &prevColor, IMGbuffer *img, KDtree *kdt, double prob = 1.)
+void sppmForward(const Object *scene, const Ray &ray, int depth, const Vec3 &prevColor, IMGbuffer *img, KDtree *kdt, double prob = 1.)
 {
     if (prevColor.L_inf() < eps)
         return;
