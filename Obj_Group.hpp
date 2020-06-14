@@ -13,7 +13,7 @@ private:
 
 public:
     ObjGroup() = default;
-    explicit ObjGroup(int size) : Object(), _items(std::vector<Object *>(size, nullptr)) {}
+    explicit ObjGroup(size_t size) : Object(), _items(std::vector<Object *>(size, nullptr)) {}
     ~ObjGroup()
     {
         for (auto &ii : _items)
@@ -30,11 +30,6 @@ public:
             result |= ii->intersect(ray, hit);
 
         return result;
-    }
-
-    std::pair<Vec3,Vec3> AABB() const override
-    {
-        return std::make_pair(_aabb[0], _aabb[1]);
     }
 
     std::pair<Vec3, Vec3> AABB() const override
@@ -57,5 +52,16 @@ public:
         return true;
     }
 
+    bool add(Object *obj)
+    {
+        _items.push_back(obj);
+        auto bb = obj->AABB();
+        _aabb[0] = Vec3::mergeMin(_aabb[0], bb.first);
+        _aabb[1] = Vec3::mergeMin(_aabb[1], bb.second);
+        return true;
+    }
+
     size_t size() const { return _items.size(); }
+
+    // void buildBVH()
 };

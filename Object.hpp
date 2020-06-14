@@ -24,4 +24,5 @@ public:
 
 #include "Obj_Geometry.hpp"
 #include "Obj_Mesh.hpp"
+#include "Obj_Group.hpp"
 // #include "Obj_Bezier.hpp" CANCELLED

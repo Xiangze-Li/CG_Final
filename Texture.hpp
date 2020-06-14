@@ -30,7 +30,7 @@ private:
     int _width, _height, _channel;
 
 public:
-    Texture(std::string textureFile = "", Vec3 color = Vec3(1.), Vec3 emission = Vec3(0.), Reflect_t refl = Texture::Reflect_t::DIFF, double brdf = 1.5)
+    Texture(Vec3 color = Vec3(1.), Vec3 emission = Vec3(0.), Reflect_t refl = Texture::Reflect_t::DIFF, double brdf = 1.5, std::string textureFile = "")
         : _textureFile(textureFile), _color(color), _emission(emission), _refl(refl), _brdf(brdf)
     {
         if (_textureFile.empty())
