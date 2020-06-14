@@ -7,11 +7,12 @@
 namespace TEXTURE
 {
     Texture textures[] = {
-        Texture()};
+        Texture(Vec3(.7),Vec3(0.),Texture::Reflect_t::DIFF)};
 } // namespace TEXTURE
 
 SceneParser scene(
-    Camera(Vec3(), Vec3(), Vec3(), 0., 1024, 768, 1.),
-    new PointLight(Vec3()),
-    {new Sphere(Vec3(), 1., &(TEXTURE::textures[0]))},
-    Vec3());
+    "test",
+    Camera(Vec3(0.), Vec3(1,0,0), Vec3(0,1,0), 90.0, 1024, 768, 0.),
+    new PointLight(Vec3(1,1,1)),
+    {new Sphere(Vec3(.3), .2, &(TEXTURE::textures[0]))},
+    Vec3(0.));
