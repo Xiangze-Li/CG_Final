@@ -73,6 +73,13 @@ public:
         _aabb[1] = Vec3::mergeMin(std::get<1>(tmp0), std::get<1>(tmp1));
     }
 
+    virtual ~BVH_Node(){
+        if (_child[0])
+            delete _child[0];
+        if (!_isLeaf && _child[1])
+            delete _child[1];
+    }
+
     bool intersect(const Ray &ray, Hit &hit) const override
     {
         if (!intersectWithAABB(ray, this->AABB()))

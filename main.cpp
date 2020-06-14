@@ -48,57 +48,55 @@ int main(int argc, char **argv)
     for (int iter = 1; iter <= ITER; iter++)
     {
         KDtree tree;
-        if (iter < 3 || iter % 1 == 0)
+        // if (iter < 3 || iter % 1 == 0)
+        // {
+        if (iter > 1)
         {
-            if (iter > 1)
-            {
-                SAMPLE /= sqrt(ALPHA);
-                RADIUS *= ALPHA;
-            }
-#pragma omp num_thread(thrNum)
-#pragma omp parallel for schedule(dynamic)
-            for (size_t y = 0; y < HEIGHT; y++)
-            {
-                int threadNo = omp_get_thread_num();
-                if (threadNo == 0)
-                {
-                    cerr << "\rBuilding k-D tree " << 100. * double(y) / HEIGHT << "%. ";
-                    cerr.flush();
-                }
-                for (size_t x = 0; x < WIDTH; x++)
-                {
-                    for (size_t subY = 0; subY < 2; subY++)
-                        for (size_t subX = 0; subX < 2; subX++)
-                        {
-                            // double r1 = 2 * rand01(), dx = r1 < 1 ? sqrt(r1) : 2 - sqrt(r1);
-                            // double r2 = 2 * rand01(), dy = r2 < 1 ? sqrt(r2) : 2 - sqrt(r2);
-                            // Vec3 dir = camX * ((dx / 2. + x + subX) / WIDTH - 0.5) +
-                            //            camY * ((dy / 2. + y + subY) / HEIGHT - 0.5) + camera.dir();
-                            // Vec3 pp = camera.ori() + dir * 150., loc = camera.ori() + (Vec3(rand01() * 1.05, rand01() - .5, 0.) * 2 * APERTURE);
-
-                            std::vector<SPPMNode> tmp = sppmBacktrace(&group, camera.generateRay(x + subX, y + subY), 0, y * WIDTH + x);
-                            for (auto &nn : tmp)
-                                if (nn.index > 0)
-                                {
-                                    nn.r = RADIUS;
-                                    ball[threadNo].push_back(nn);
-                                }
-                        }
-                }
-            }
-            cerr << "\nBuilding k-D tree: Gathering threads ...";
-            cerr.flush();
-            std::vector<SPPMNode> total;
-            for (size_t i = 0; i < thrNum; i++)
-                total.insert(total.end(), ball[i].begin(), ball[i].end());
-            // KDtree tree(total);
-            tree.init(total);
-            cerr << "Done!" << endl;
+            SAMPLE /= sqrt(ALPHA);
+            RADIUS *= ALPHA;
         }
+#pragma omp parallel for num_threads(thrNum) schedule(dynamic)
+        for (size_t y = 0; y < HEIGHT; y++)
+        {
+            int threadNo = omp_get_thread_num();
+            if (threadNo == 0)
+            {
+                cerr << "\rBuilding k-D tree " << 100. * double(y) / HEIGHT << "%. ";
+                cerr.flush();
+            }
+            for (size_t x = 0; x < WIDTH; x++)
+            {
+                for (size_t subY = 0; subY < 2; subY++)
+                    for (size_t subX = 0; subX < 2; subX++)
+                    {
+                        // double r1 = 2 * rand01(), dx = r1 < 1 ? sqrt(r1) : 2 - sqrt(r1);
+                        // double r2 = 2 * rand01(), dy = r2 < 1 ? sqrt(r2) : 2 - sqrt(r2);
+                        // Vec3 dir = camX * ((dx / 2. + x + subX) / WIDTH - 0.5) +
+                        //            camY * ((dy / 2. + y + subY) / HEIGHT - 0.5) + camera.dir();
+                        // Vec3 pp = camera.ori() + dir * 150., loc = camera.ori() + (Vec3(rand01() * 1.05, rand01() - .5, 0.) * 2 * APERTURE);
+
+                        std::vector<SPPMNode> tmp = sppmBacktrace(&group, camera.generateRay(x + subX, y + subY), 0, y * WIDTH + x);
+                        for (auto &nn : tmp)
+                            if (nn.index > 0)
+                            {
+                                nn.r = RADIUS;
+                                ball[threadNo].push_back(nn);
+                            }
+                    }
+            }
+        }
+        cerr << "\nBuilding k-D tree: Gathering threads ...";
+        cerr.flush();
+        std::vector<SPPMNode> total;
+        for (size_t i = 0; i < thrNum; i++)
+            total.insert(total.end(), ball[i].begin(), ball[i].end());
+        // KDtree tree(total);
+        tree.init(total);
+        cerr << "Done!" << endl;
+        // }
 
         int per = SAMPLE / thrNum + 1;
-#pragma omp num_thread(thrNum)
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for num_threads(thrNum) schedule(dynamic)
         for (size_t t = 0; t < thrNum; t++)
         {
             int threadNo = omp_get_thread_num();
@@ -136,11 +134,11 @@ int main(int argc, char **argv)
             char sout[100];
             sprintf(sout, "%s%03d.ppm", scene.name().c_str(), iter);
             FILE *f = fopen(sout, "w");
-            fprintf(f, "P6\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
+            fprintf(f, "P3\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
             for (int y = HEIGHT - 1; y >= 0; --y)
                 for (int x = WIDTH - 1; x >= 0; --x)
                 {
-                    fprintf(f, "%c%c%c",
+                    fprintf(f, "%d %d %d\n",
                             gamma_trans(imgFinal[y * WIDTH + x].getColor().x()),
                             gamma_trans(imgFinal[y * WIDTH + x].getColor().y()),
                             gamma_trans(imgFinal[y * WIDTH + x].getColor().z()));

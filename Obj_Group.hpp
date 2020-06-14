@@ -15,11 +15,7 @@ private:
 
 public:
     ObjGroup(Object **objs, size_t size) : BVH_Node(objs, size), _objs(objs), _size(size) {}
-    ~ObjGroup()
-    {
-        for (size_t i = 0; i < _size; i++)
-            delete _objs[i];
-    }
+    ~ObjGroup() = default;
 
     bool intersect(const Ray &ray, Hit &hit) const override
     {
