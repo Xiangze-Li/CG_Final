@@ -1,12 +1,12 @@
 AABB:
-    [ ] @critical 在Mesh内部实现AABB加速 @created(20-06-12 17:08)
-    [ ] @low 在 Group 求交过程中应用AABB @created(20-06-11 12:52)
+    [X] @critical 在Mesh内部实现AABB加速 @created(20-06-12 17:08) @started(20-06-14 08:00) @done(20-06-14 11:39) @lasted(3h39m10s)
+    [X] @low 在 Group 求交过程中应用AABB @created(20-06-11 12:52) @started(20-06-14 08:00) @done(20-06-14 11:39) @lasted(3h39m19s)
 
 场景:
-    [ ] 从文件中读取场景 @created(20-06-12 17:09)
+    [-] 从文件中读取场景 @created(20-06-12 17:09) @cancelled(20-06-14 11:39) 改为将场景硬编码到头文件中
     [ ] @low 设计场景 @est(3h) @created(20-06-11 10:02)
 
-[ ] 重写主函数 @created(20-06-13 17:21)
+[ ] @critical @today 重写主函数 @created(20-06-13 17:21)
 [X] 主函数 @created(20-06-12 08:00) @started(20-06-12 08:00) @done(20-06-12 09:52) @lasted(1h52m2s)
 [X] SPPM算法 @est(12h) @created(20-06-11 10:02) @started(20-06-11 15:30) @done(20-06-11 16:51) @lasted(1h21m31s)
 [X] 更改相机的实现方式 (硬实现 -> 软实现) && *景深* @created(20-06-12 17:05) @started(20-06-13 14:30) @done(20-06-13 16:12) @lasted(1h42m52s)
