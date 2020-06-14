@@ -10,7 +10,7 @@ private:
     Vec3 _aabb[2];
     bool _isLeaf;
     template <int CORD>
-    static bool cmp(const Object *&l, const Object *&r)
+    static bool cmp(Object *l, Object *r)
     {
         auto ll = std::get<2>(l->AABB()), rr = std::get<2>(l->AABB());
         return ll[CORD] < rr[CORD];
@@ -37,7 +37,7 @@ private:
     }
 
 public:
-    BVH_Node(Object *const *objs, int size) : Object(nullptr), _isLeaf(false)
+    BVH_Node(Object **objs, int size) : Object(nullptr), _isLeaf(false)
     {
         if (size == 1)
         {

@@ -24,10 +24,10 @@ struct KDtreeNode
     int child[2];
     KDtreeNode() : sppm(), child{0, 0} {}
     KDtreeNode(const SPPMNode &sppm_) : sppm(sppm_), child{0, 0} {}
-    bool operator<(const KDtreeNode &r) const
-    {
-        return this->sppm.pos[KDtree::currentDim] < r.sppm.pos[KDtree::currentDim];
-    }
+    // bool operator<(const KDtreeNode &r) const
+    // {
+    //     return this->sppm.pos[KDtree::currentDim] < r.sppm.pos[KDtree::currentDim];
+    // }
 };
 
 class KDtree
@@ -35,7 +35,6 @@ class KDtree
     friend struct KDtreeNode;
 
 private:
-    static int currentDim;
     int size;
     int root;
     std::vector<KDtreeNode> nodes;
@@ -43,7 +42,10 @@ private:
     {
         currentDim = dim;
         int mid = (l + r) >> 1;
-        std::nth_element(nodes.begin() + l, nodes.begin() + mid, nodes.begin() + r + 1);
+        std::nth_element(nodes.begin() + l, nodes.begin() + mid, nodes.begin() + r + 1,
+                         [this](const KDtreeNode &l, const KDtreeNode &r) {
+                             return l.sppm.pos[this->currentDim] < r.sppm.pos[this->currentDim];
+                         });
         nodes[mid].m[0] = nodes[mid].sppm.pos - nodes[mid].sppm.r;
         nodes[mid].m[1] = nodes[mid].sppm.pos + nodes[mid].sppm.r;
         if (l < mid)
@@ -106,4 +108,6 @@ public:
     ~KDtree() {}
 
     void query(const SPPMNode &node, IMGbuffer *img) { query(node, img, root); }
+
+    int currentDim;
 };

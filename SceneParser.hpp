@@ -20,7 +20,7 @@ public:
     SceneParser(const std::string &name,
                 const Camera &camera,
                 Light *light,
-                const std::vector<Object *> &objects,
+                std::vector<Object *> &&objects,
                 const Vec3 &backgroundColor)
         : _name(name), _camera(camera),
           _light(light), _bgColor(backgroundColor),

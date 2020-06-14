@@ -11,6 +11,7 @@ private:
 
 public:
     Light(const Vec3 &color = Vec3(1.2)) : _color(color) {}
+    virtual ~Light() = default;
     virtual Ray generateRay() const = 0;
     virtual Vec3 color() const { return _color; }
 };

@@ -2,12 +2,15 @@
 #include "Image.hpp"
 #include "Ray.hpp"
 #include "Scene.hpp"
-#include <omp.h>
 #include <cstdlib>
 #include <cstdio>
 #include <string>
 #include <iostream>
 #include <vector>
+
+#define OMP_GET_NUM_THREADS
+#define OMP_GET_THREAD_NUM
+#include "omp.h"
 
 using std::cerr;
 using std::cout;
@@ -32,6 +35,7 @@ int main(int argc, char **argv)
     const auto &bgColor = scene.bg();
 
     int WIDTH = camera.width(), HEIGHT = camera.height();
+    SAMPLE *= WIDTH * HEIGHT;
 
     int thrNum = omp_get_num_procs();
     IMGbuffer **imgBuff = new IMGbuffer *[thrNum];
@@ -51,11 +55,16 @@ int main(int argc, char **argv)
                 SAMPLE /= sqrt(ALPHA);
                 RADIUS *= ALPHA;
             }
-#pragma omp parallel for num_thread(nth) schedule(dynamic)
+#pragma omp num_thread(thrNum)
+#pragma omp parallel for schedule(dynamic)
             for (size_t y = 0; y < HEIGHT; y++)
             {
                 int threadNo = omp_get_thread_num();
-                cerr << "\rBuilding k-D tree " << 100. * double(y) / HEIGHT << "%. ";
+                if (threadNo == 0)
+                {
+                    cerr << "\rBuilding k-D tree " << 100. * double(y) / HEIGHT << "%. ";
+                    cerr.flush();
+                }
                 for (size_t x = 0; x < WIDTH; x++)
                 {
                     for (size_t subY = 0; subY < 2; subY++)
@@ -77,7 +86,8 @@ int main(int argc, char **argv)
                         }
                 }
             }
-            cerr << "\rBuilding k-D tree: Gathering threads ...";
+            cerr << "\nBuilding k-D tree: Gathering threads ...";
+            cerr.flush();
             std::vector<SPPMNode> total;
             for (size_t i = 0; i < thrNum; i++)
                 total.insert(total.end(), ball[i].begin(), ball[i].end());
@@ -87,30 +97,38 @@ int main(int argc, char **argv)
         }
 
         int per = SAMPLE / thrNum + 1;
-#pragma omp parallel for num_threads(nth) schedule(dynamic)
+#pragma omp num_thread(thrNum)
+#pragma omp parallel for schedule(dynamic)
         for (size_t t = 0; t < thrNum; t++)
         {
             int threadNo = omp_get_thread_num();
             for (size_t photon = 0; photon < per; photon++)
             {
                 if (threadNo == 0 && photon % 1000 == 0)
+                {
                     cerr << "\rSPPM tracing " << 100. * photon / per;
-
+                    cerr.flush();
+                }
                 auto l = light.generateRay();
                 tree.query(SPPMNode(l.ori(), light.color(), l.dir()), imgBuff[threadNo]);
                 sppmForward(&group, l, 0, light.color(), imgBuff[threadNo], &tree);
             }
         }
+        cerr << "\nSPPM tracing ended." << endl;
 
-        memset(imgNow, 0, sizeof imgNow);
+        for (int j = HEIGHT * WIDTH - 1; j >= 0; j--)
+            imgNow[j].reset();
+
         for (size_t i = 0; i < thrNum; i++)
         {
-            for (size_t j = HEIGHT * WIDTH - 1; j >= 0; j--)
+            for (int j = HEIGHT * WIDTH - 1; j >= 0; j--)
+            {
                 imgNow[j] += imgBuff[i][j];
-            memset(imgBuff[i], 0, sizeof imgBuff[i]);
+                imgBuff[i][j].reset();
+            }
         }
 
-        for (size_t i = HEIGHT * WIDTH - 1; i >= 0; i--)
+        for (int i = HEIGHT * WIDTH - 1; i >= 0; i--)
             imgFinal[i] += imgNow[i] / imgNow[i].cntr;
 
         if (iter == 1 || iter % 1 == 0)
@@ -129,6 +147,6 @@ int main(int argc, char **argv)
                 }
             fclose(f);
         }
-        cerr << "\rIter #" << iter << " done." << endl;
+        cerr << "Iter #" << iter << " done." << endl;
     }
 }
