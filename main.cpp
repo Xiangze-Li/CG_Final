@@ -30,12 +30,12 @@ using std::endl;
 int main(int argc, char **argv)
 {
     int ITER = 1;
-    double SAMPLE = 12., RADIUS = 2., ALPHA = 0.8;
+    double SAMPLE = 1200., RADIUS = 2., ALPHA = 0.8;
     if (argc != 1 && argc != 5)
     {
         cout << "Usage: \n\n"
-            << "\t<EXCUTABLE> iter sample radius alpha\n"
-            << endl;
+             << "\t<EXCUTABLE> iter sample radius alpha\n"
+             << endl;
         return 1;
     }
     else if (argc == 5)
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     int thrNum = omp_get_num_procs();
     cerr << "Using " << thrNum << " core(s)." << endl;
 
-    IMGbuffer **imgBuff = new IMGbuffer * [thrNum];
+    IMGbuffer **imgBuff = new IMGbuffer *[thrNum];
     for (size_t i = 0; i < thrNum; i++)
         imgBuff[i] = new IMGbuffer[WIDTH * HEIGHT];
     IMGbuffer *imgFinal = new IMGbuffer[WIDTH * HEIGHT];
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
             RADIUS *= ALPHA;
         }
 
-    #pragma omp parallel for num_threads(thrNum) schedule(dynamic)
+#pragma omp parallel for num_threads(thrNum) schedule(dynamic)
         for (size_t y = 0; y < HEIGHT; y++)
         {
             int threadNo = omp_get_thread_num();
@@ -113,13 +113,14 @@ int main(int argc, char **argv)
         // KDtree tree(total);
         tree.init(total);
         cerr << "Done!" << endl;
+        cerr << "Built a k-D tree with " << total.size() << " points. " << endl;
         // }
 
         delete[] ball;
 
-
         int per = SAMPLE / thrNum + 1;
-    #pragma omp parallel for num_threads(thrNum) schedule(dynamic,1)
+
+#pragma omp parallel for num_threads(thrNum) schedule(dynamic, 1)
         for (size_t t = 0; t < thrNum; t++)
         {
             int threadNo = omp_get_thread_num();
@@ -133,9 +134,9 @@ int main(int argc, char **argv)
                 auto l = light.generateRay();
                 tree.query(SPPMNode(l.ori(), light.color(), l.dir()), imgBuff[threadNo]);
                 sppmForward(&group, l, 0, light.color(), imgBuff[threadNo], &tree);
-
             }
-            cerr << endl;
+            if (threadNo == 0)
+                cerr << endl;
         }
         cerr << "SPPM tracing ended!" << endl;
 
@@ -172,6 +173,4 @@ int main(int argc, char **argv)
         }
         cerr << "Iter #" << iter << " done." << endl;
     }
-
-
 }
