@@ -3,3 +3,9 @@ tiny_obj_loader.h
 line.sh
 Archived/BezierCurve.hpp
 Archived/Obj_Bezier.hpp
+/.vs
+/CG_Final.vcxproj.user
+/CG_Final.vcxproj.filters
+/CG_Final.vcxproj
+/CG_Final.sln
+/Debug
