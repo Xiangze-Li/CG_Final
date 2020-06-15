@@ -66,10 +66,12 @@ int main(int argc, char **argv)
 
     for (int iter = 1; iter <= ITER; iter++)
     {
-        KDtree tree;
-        auto *ball = new std::vector<SPPMNode>[thrNum];
+        //KDtree tree;
         // if (iter < 3 || iter % 1 == 0)
         // {
+
+        auto ball = new std::vector<SPPMNode>[thrNum];
+
         if (iter > 1)
         {
             SAMPLE /= sqrt(ALPHA);
@@ -82,7 +84,7 @@ int main(int argc, char **argv)
             int threadNo = omp_get_thread_num();
             if (threadNo == 0)
             {
-                cerr << "\rBuilding k-D tree " << std::fixed << std::setprecision(2) << 100. * double(y) / HEIGHT << "%. ";
+                cerr << "\rBuilding k-D tree " << std::fixed << std::setprecision(2) <<  100. * double(y) / HEIGHT << "%. ";
                 cerr.flush();
             }
             for (size_t x = 0; x < WIDTH; x++)
@@ -111,8 +113,8 @@ int main(int argc, char **argv)
         std::vector<SPPMNode> total;
         for (size_t i = 0; i < thrNum; i++)
             total.insert(total.end(), ball[i].begin(), ball[i].end());
-        // KDtree tree(total);
-        tree.init(total);
+        KDtree tree(total);
+        //tree.init(total);
         cerr << "Done!" << endl;
         cerr << "Built a k-D tree with " << total.size() << " points. " << endl;
         // }
