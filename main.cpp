@@ -30,8 +30,10 @@ using std::endl;
 
 int main(int argc, char **argv)
 {
-    int ITER = 3;
-    double SAMPLE = 1200., RADIUS = 2., ALPHA = 0.8;
+    system("date");
+    int ITER = 5;
+    double SAMPLE = 50., RADIUS = 2., ALPHA = 0.8;
+
     if (argc != 1 && argc != 5)
     {
         cout << "Usage: \n\n"
@@ -117,7 +119,7 @@ int main(int argc, char **argv)
         //tree.init(total);
         cerr << "Done!" << endl;
         cerr << "Built a k-D tree with " << total.size() << " points. " << endl;
-        // }
+        system("date");
 
         delete[] ball;
 
@@ -161,7 +163,7 @@ int main(int argc, char **argv)
         if (iter == 1 || iter % 1 == 0)
         {
             char sout[100];
-            sprintf(sout, "%s%03d.ppm", scene.name().c_str(), iter);
+            sprintf(sout, "%s__%03d.ppm", scene.name().c_str(), iter);
             FILE *f = fopen(sout, "w");
             fprintf(f, "P3\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
             for (int y = HEIGHT - 1; y >= 0; --y)
@@ -175,5 +177,6 @@ int main(int argc, char **argv)
             fclose(f);
         }
         cerr << "Iter #" << iter << " done." << endl;
+        system("date");
     }
 }

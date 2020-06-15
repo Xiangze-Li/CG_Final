@@ -29,18 +29,13 @@ private:
     int _width, _height, _channel;
 
 public:
-    Texture(Vec3 color = Vec3(1.), Reflect_t refl = Texture::Reflect_t::DIFF, double brdf = 1.5, std::string textureFile = "")
-        : _textureFile(textureFile), _color(color), _refl(refl), _brdf(brdf)
+    Texture(Vec3 color = Vec3(1.), Reflect_t refl = Texture::Reflect_t::DIFF, double brdf = 1.5)
+        : _textureFile(), _color(color), _refl(refl), _buff(nullptr),
+          _brdf(brdf), _width(-1), _height(-1), _channel(-1) {}
+    Texture(const std::string &filename)
+        : _textureFile(filename), _color(0.), _refl(Reflect_t::DIFF), _brdf(1.5)
     {
-        if (_textureFile.empty())
-        {
-            _buff = nullptr;
-            _width = _height = _channel = -1;
-        }
-        else
-        {
-            _buff = stbi_load(_textureFile.c_str(), &_width, &_height, &_channel, 0);
-        }
+        _buff = stbi_load(_textureFile.c_str(), &_width, &_height, &_channel, 0);
     }
     Texture(const Texture &r)
         : _textureFile(r._textureFile), _color(r._color), _refl(r._refl), _brdf(r._brdf)
@@ -70,7 +65,7 @@ public:
         int index = posY * _width * _channel + posX * _channel;
         int r = _buff[index + 0], g = _buff[index + 1], b = _buff[index + 2];
 
-        return std::make_pair(_refl, (Vec3(r, g, b) / 255.));
+        return std::make_pair(Reflect_t::DIFF, (Vec3(r, g, b) / 255.));
     }
 
     std::string filename() const { return _textureFile; }
