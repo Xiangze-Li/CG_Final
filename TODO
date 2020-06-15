@@ -4,7 +4,8 @@ To Test:
 
 Debug:
     [ ] 平面 Plane @created(20-06-15 20:19)
-    [ ] 镜面材质 SPEC @created(20-06-15 20:19)
+    [ ] 镜面材质 SPEC? @created(20-06-15 20:19)
+    [ ] 或者是立方体 Cube @created(20-06-15 20:25)
     [ ] 折射次数 @created(20-06-15 20:19)
 
 Archive:
