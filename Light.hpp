@@ -6,9 +6,14 @@
 
 class Light
 {
+private:
+    Vec3 _color;
+
 public:
-    Light() = default;
+    Light(const Vec3 &color = Vec3(1.2)) : _color(color) {}
+    virtual ~Light() = default;
     virtual Ray generateRay() const = 0;
+    virtual Vec3 color() const { return _color; }
 };
 
 class DirectionalLight : public Light
@@ -17,7 +22,7 @@ private:
     Vec3 _ori, _dir;
 
 public:
-    DirectionalLight(const Vec3 &ori, const Vec3 &dir) : _ori(ori), _dir(dir) {}
+    DirectionalLight(const Vec3 &ori, const Vec3 &dir, const Vec3 &color = Vec3(1.2)) : Light(color), _ori(ori), _dir(dir) {}
     Ray generateRay() const override { return Ray(_ori, _dir); }
 };
 
@@ -27,7 +32,7 @@ private:
     Vec3 _ori;
 
 public:
-    PointLight(const Vec3 &ori) : _ori(ori) {}
+    PointLight(const Vec3 &ori, const Vec3 &color = Vec3(1.2)) : Light(color), _ori(ori) {}
     Ray generateRay() const override
     {
         double theta = rand01() * 2. * PI, phi = acos(rand01() * 2. - 1.);

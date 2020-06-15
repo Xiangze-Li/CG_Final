@@ -10,7 +10,7 @@ private:
     Vec3 _aabb[2];
     bool _isLeaf;
     template <int CORD>
-    static bool cmp(const Object *&l, const Object *&r)
+    static bool cmp(Object *l, Object *r)
     {
         auto ll = std::get<2>(l->AABB()), rr = std::get<2>(l->AABB());
         return ll[CORD] < rr[CORD];
@@ -37,7 +37,7 @@ private:
     }
 
 public:
-    BVH_Node(Object *const *objs, int size) : Object(nullptr), _isLeaf(false)
+    BVH_Node(Object **objs, int size) : Object(nullptr), _isLeaf(false)
     {
         if (size == 1)
         {
@@ -71,6 +71,13 @@ public:
         auto tmp0 = _child[0]->AABB(), tmp1 = _child[1]->AABB();
         _aabb[0] = Vec3::mergeMin(std::get<0>(tmp0), std::get<0>(tmp1));
         _aabb[1] = Vec3::mergeMin(std::get<1>(tmp0), std::get<1>(tmp1));
+    }
+
+    virtual ~BVH_Node(){
+        if (_child[0])
+            delete _child[0];
+        if (!_isLeaf && _child[1])
+            delete _child[1];
     }
 
     bool intersect(const Ray &ray, Hit &hit) const override

@@ -1,25 +1,21 @@
 #pragma once
 
 #include "Obj_BVH.hpp"
+#include "Vec3.hpp"
 #include <vector>
 #include <algorithm>
-#include <Vec3.hpp>
 
 class ObjGroup : public BVH_Node
 {
 private:
     // std::vector<Object *> _items;
 
-    Object *const *_objs;
+    Object **_objs;
     size_t _size;
 
 public:
-    ObjGroup(Object *const *objs, size_t size) : BVH_Node(objs, size), _objs(objs), _size(size) {}
-    ~ObjGroup()
-    {
-        for (size_t i = 0; i < _size; i++)
-            delete _objs[i];
-    }
+    ObjGroup(Object **objs, size_t size) : BVH_Node(objs, size), _objs(objs), _size(size) {}
+    ~ObjGroup() = default;
 
     bool intersect(const Ray &ray, Hit &hit) const override
     {

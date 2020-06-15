@@ -23,8 +23,7 @@ public:
     }
     ~Mesh()
     {
-        for (auto& i:_triangles)
-            delete i;
+        delete bvhTree;
     }
 
     bool intersect(const Ray &ray, Hit &hit) const override { return bvhTree->intersect(ray, hit); }

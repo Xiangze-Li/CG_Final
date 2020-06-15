@@ -22,7 +22,6 @@ public:
 
 private:
     Vec3 _color;
-    Vec3 _emission;
     Reflect_t _refl;
     double _brdf;
     std::string _textureFile;
@@ -30,8 +29,8 @@ private:
     int _width, _height, _channel;
 
 public:
-    Texture(Vec3 color = Vec3(1.), Vec3 emission = Vec3(0.), Reflect_t refl = Texture::Reflect_t::DIFF, double brdf = 1.5, std::string textureFile = "")
-        : _textureFile(textureFile), _color(color), _emission(emission), _refl(refl), _brdf(brdf)
+    Texture(Vec3 color = Vec3(1.), Reflect_t refl = Texture::Reflect_t::DIFF, double brdf = 1.5, std::string textureFile = "")
+        : _textureFile(textureFile), _color(color), _refl(refl), _brdf(brdf)
     {
         if (_textureFile.empty())
         {
@@ -44,7 +43,7 @@ public:
         }
     }
     Texture(const Texture &r)
-        : _textureFile(r._textureFile), _color(r._color), _emission(r._emission), _refl(r._refl), _brdf(r._brdf)
+        : _textureFile(r._textureFile), _color(r._color), _refl(r._refl), _brdf(r._brdf)
     {
         if (_textureFile.empty())
         {
