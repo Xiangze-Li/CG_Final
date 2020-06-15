@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Object.hpp"
 #include "utils.hpp"
@@ -18,7 +18,7 @@ private:
 
     static bool intersectWithAABB(const Ray &ray, const AABBcord &aabb)
     {
-        double tmin = -eps, tmax = -INF;
+        double tmin = -eps, tmax = INF;
         Vec3 p0 = std::get<0>(aabb), p1 = std::get<1>(aabb);
         for (size_t DIM = 0; DIM < 3; DIM++)
         {
@@ -70,7 +70,7 @@ public:
 
         auto tmp0 = _child[0]->AABB(), tmp1 = _child[1]->AABB();
         _aabb[0] = Vec3::mergeMin(std::get<0>(tmp0), std::get<0>(tmp1));
-        _aabb[1] = Vec3::mergeMin(std::get<1>(tmp0), std::get<1>(tmp1));
+        _aabb[1] = Vec3::mergeMax(std::get<1>(tmp0), std::get<1>(tmp1));
     }
 
     virtual ~BVH_Node(){

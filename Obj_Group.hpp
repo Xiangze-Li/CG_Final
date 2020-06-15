@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Obj_BVH.hpp"
 #include "Vec3.hpp"
@@ -20,6 +20,7 @@ public:
     bool intersect(const Ray &ray, Hit &hit) const override
     {
         return BVH_Node::intersect(ray, hit);
+
     }
 
     AABBcord AABB() const override

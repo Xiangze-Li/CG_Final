@@ -1,3 +1,5 @@
+﻿#define _CRT_SECURE_NO_WARNINGS
+
 #include "SPPM.hpp"
 #include "Image.hpp"
 #include "Ray.hpp"
@@ -16,18 +18,33 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
+/*int main()
+{
+    Hit hit;
+    auto& group = scene.group();
+    auto ray = scene.camera().generateRay(320, 240);
+    bool result = group.intersect(ray, hit);
+    return 0;
+}*/
+
 int main(int argc, char **argv)
 {
-    if (argc != 5)
+    int ITER = 1;
+    double SAMPLE = 12., RADIUS = 2., ALPHA = 0.8;
+    if (argc != 1 && argc != 5)
     {
         cout << "Usage: \n\n"
-             << "\t<EXCUTABLE> iter sample radius alpha\n"
-             << endl;
+            << "\t<EXCUTABLE> iter sample radius alpha\n"
+            << endl;
         return 1;
     }
-    int ITER = atoi(argv[1]);
-    double SAMPLE = atof(argv[2]), RADIUS = atof(argv[3]),
-           ALPHA = atof(argv[4]);
+    else if (argc == 5)
+    {
+        ITER = atoi(argv[1]);
+        SAMPLE = atof(argv[2]);
+        RADIUS = atof(argv[3]);
+        ALPHA = atof(argv[4]);
+    }
 
     const auto &camera = scene.camera();
     const auto &group = scene.group();
@@ -38,13 +55,15 @@ int main(int argc, char **argv)
     SAMPLE *= WIDTH * HEIGHT;
 
     int thrNum = omp_get_num_procs();
-    IMGbuffer **imgBuff = new IMGbuffer *[thrNum];
+    cerr << "Using " << thrNum << " core(s)." << endl;
+
+    IMGbuffer **imgBuff = new IMGbuffer * [thrNum];
     for (size_t i = 0; i < thrNum; i++)
         imgBuff[i] = new IMGbuffer[WIDTH * HEIGHT];
     IMGbuffer *imgFinal = new IMGbuffer[WIDTH * HEIGHT];
     IMGbuffer *imgNow = new IMGbuffer[WIDTH * HEIGHT];
 
-    std::vector<SPPMNode> ball[thrNum];
+    auto *ball = new std::vector<SPPMNode>[thrNum];
     for (int iter = 1; iter <= ITER; iter++)
     {
         KDtree tree;
@@ -55,7 +74,8 @@ int main(int argc, char **argv)
             SAMPLE /= sqrt(ALPHA);
             RADIUS *= ALPHA;
         }
-#pragma omp parallel for num_threads(thrNum) schedule(dynamic)
+
+    #pragma omp parallel for num_threads(thrNum) schedule(dynamic)
         for (size_t y = 0; y < HEIGHT; y++)
         {
             int threadNo = omp_get_thread_num();
@@ -95,8 +115,11 @@ int main(int argc, char **argv)
         cerr << "Done!" << endl;
         // }
 
+        delete[] ball;
+
+
         int per = SAMPLE / thrNum + 1;
-#pragma omp parallel for num_threads(thrNum) schedule(dynamic)
+    #pragma omp parallel for num_threads(thrNum) schedule(dynamic,1)
         for (size_t t = 0; t < thrNum; t++)
         {
             int threadNo = omp_get_thread_num();
@@ -104,15 +127,17 @@ int main(int argc, char **argv)
             {
                 if (threadNo == 0 && photon % 1000 == 0)
                 {
-                    cerr << "\rSPPM tracing " << 100. * photon / per;
+                    cerr << "\rSPPM tracing " << 100. * photon / per << "%.";
                     cerr.flush();
                 }
                 auto l = light.generateRay();
                 tree.query(SPPMNode(l.ori(), light.color(), l.dir()), imgBuff[threadNo]);
                 sppmForward(&group, l, 0, light.color(), imgBuff[threadNo], &tree);
+
             }
+            cerr << endl;
         }
-        cerr << "\nSPPM tracing ended." << endl;
+        cerr << "SPPM tracing ended!" << endl;
 
         for (int j = HEIGHT * WIDTH - 1; j >= 0; j--)
             imgNow[j].reset();
@@ -147,4 +172,6 @@ int main(int argc, char **argv)
         }
         cerr << "Iter #" << iter << " done." << endl;
     }
+
+
 }

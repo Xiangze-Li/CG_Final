@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "utils.hpp"
 #include "Vec3.hpp"
@@ -23,7 +23,13 @@ struct IMGbuffer
     }
     IMGbuffer operator+(const IMGbuffer &r) const { return IMGbuffer(cntr + r.cntr, color + r.color); }
     IMGbuffer operator*(const double &r) const { return IMGbuffer(cntr * r, color * r); }
-    IMGbuffer operator/(const double &r) const { return IMGbuffer(cntr / r, color / r); }
+    IMGbuffer operator/(const double &r) const
+    {
+        if (r != 0.)
+            return IMGbuffer(cntr / r, color / r);
+        else
+            return IMGbuffer(cntr, color);
+    }
     IMGbuffer &operator+=(const IMGbuffer &r)
     {
         cntr += r.cntr;

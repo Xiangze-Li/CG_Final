@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "utils.hpp"
 #include "Vec3.hpp"
@@ -14,7 +14,8 @@ struct SPPMNode
 
     SPPMNode() : index(-1), prob(1.), pos(), color(), dir(), r() {}
     SPPMNode(const Vec3 &pos_, const Vec3 &color_, const Vec3 &dir_, double r_ = 1., int index_ = -1, double prob_ = 1)
-        : pos(pos_), color(color_), dir(dir_), r(r_), index(index_), prob(prob_) {}
+        : pos(pos_), color(color_), dir(dir_), r(r_), index(index_), prob(prob_)
+    {}
 };
 
 struct KDtreeNode
@@ -22,8 +23,8 @@ struct KDtreeNode
     SPPMNode sppm;
     Vec3 m[2];
     int child[2];
-    KDtreeNode() : sppm(), child{0, 0} {}
-    KDtreeNode(const SPPMNode &sppm_) : sppm(sppm_), child{0, 0} {}
+    KDtreeNode() : sppm(), child{ 0, 0 } {}
+    KDtreeNode(const SPPMNode &sppm_) : sppm(sppm_), child{ 0, 0 } {}
     // bool operator<(const KDtreeNode &r) const
     // {
     //     return this->sppm.pos[KDtree::currentDim] < r.sppm.pos[KDtree::currentDim];
@@ -40,22 +41,22 @@ private:
     std::vector<KDtreeNode> nodes;
     int buildTree(int l, int r, int dim)
     {
-        currentDim = dim;
+        if (r < l) return -1;
         int mid = (l + r) >> 1;
         std::nth_element(nodes.begin() + l, nodes.begin() + mid, nodes.begin() + r + 1,
-                         [this](const KDtreeNode &l, const KDtreeNode &r) {
-                             return l.sppm.pos[this->currentDim] < r.sppm.pos[this->currentDim];
+                         [&dim](const KDtreeNode &l, const KDtreeNode &r) {
+                             return l.sppm.pos[dim] < r.sppm.pos[dim];
                          });
         nodes[mid].m[0] = nodes[mid].sppm.pos - nodes[mid].sppm.r;
         nodes[mid].m[1] = nodes[mid].sppm.pos + nodes[mid].sppm.r;
         if (l < mid)
         {
-            nodes[mid].child[0] = buildTree(l, mid - 1, (currentDim + 1) % 3);
+            nodes[mid].child[0] = buildTree(l, mid - 1, (dim + 1) % 3);
             mt(mid, nodes[mid].child[0]);
         }
         if (mid < r)
         {
-            nodes[mid].child[1] = buildTree(mid + 1, r, (currentDim + 1) % 3);
+            nodes[mid].child[1] = buildTree(mid + 1, r, (dim + 1) % 3);
             mt(mid, nodes[mid].child[1]);
         }
         return mid;
@@ -94,7 +95,7 @@ private:
     }
 
 public:
-    KDtree() : nodes() {}
+    KDtree() : nodes(), currentDim(0), root(-1), size(0) {}
     KDtree(const std::vector<SPPMNode> &sppmNodes) { init(sppmNodes); }
     void init(const std::vector<SPPMNode> &sppmNodes)
     {

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Vec3.hpp"
 #include "Texture.hpp"
@@ -13,7 +13,7 @@ private:
 public:
     Hit() : _texture(nullptr), _t(INF), _normal(0.) {}
 
-    float t() const { return _t; }
+    double t() const { return _t; }
     Texture *texture() const { return _texture; }
     const Vec3 &normal() const { return _normal; }
 
