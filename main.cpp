@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 
 #define OMP_GET_NUM_THREADS
@@ -29,7 +30,7 @@ using std::endl;
 
 int main(int argc, char **argv)
 {
-    int ITER = 1;
+    int ITER = 3;
     double SAMPLE = 1200., RADIUS = 2., ALPHA = 0.8;
     if (argc != 1 && argc != 5)
     {
@@ -63,10 +64,10 @@ int main(int argc, char **argv)
     IMGbuffer *imgFinal = new IMGbuffer[WIDTH * HEIGHT];
     IMGbuffer *imgNow = new IMGbuffer[WIDTH * HEIGHT];
 
-    auto *ball = new std::vector<SPPMNode>[thrNum];
     for (int iter = 1; iter <= ITER; iter++)
     {
         KDtree tree;
+        auto *ball = new std::vector<SPPMNode>[thrNum];
         // if (iter < 3 || iter % 1 == 0)
         // {
         if (iter > 1)
@@ -81,7 +82,7 @@ int main(int argc, char **argv)
             int threadNo = omp_get_thread_num();
             if (threadNo == 0)
             {
-                cerr << "\rBuilding k-D tree " << 100. * double(y) / HEIGHT << "%. ";
+                cerr << "\rBuilding k-D tree " << std::fixed << std::setprecision(2) << 100. * double(y) / HEIGHT << "%. ";
                 cerr.flush();
             }
             for (size_t x = 0; x < WIDTH; x++)
