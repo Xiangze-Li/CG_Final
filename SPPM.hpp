@@ -94,7 +94,7 @@ std::vector<SPPMNode> sppmBacktrace(const Object *scene, const Ray &ray, int dep
 
 void sppmForward(const Object *scene, const Ray &ray, int depth, const Vec3 &prevColor, IMGbuffer *img, KDtree *kdt, double prob = 1.)
 {
-    if (prevColor.L_inf() < eps || depth > 10)
+    if (prevColor.L_inf() < eps || depth > 8)
         return;
 
     Hit hit;
