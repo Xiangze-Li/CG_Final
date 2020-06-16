@@ -1,5 +1,3 @@
-// FIXME: 需要使用新的交点返回方式重构求交
-// FIXME: 需要加入传入场景 Object 的参数
 #pragma once
 
 #include "Texture.hpp"
@@ -23,7 +21,7 @@ std::vector<SPPMNode> sppmBacktrace(const Object *scene, const Ray &ray, int dep
     int into = 0;
     Texture *texture = hit.texture();
     Vec3 inter = ray.pointAt(hit.t());
-    auto feature = getFeature(*texture, inter);
+    auto feature = texture->getFeature();
     Vec3 color = feature.second;
     Vec3 normal = hit.normal(), nl = normal;
     if (normal.dot(ray.dir()) > 0)
@@ -96,7 +94,7 @@ std::vector<SPPMNode> sppmBacktrace(const Object *scene, const Ray &ray, int dep
 
 void sppmForward(const Object *scene, const Ray &ray, int depth, const Vec3 &prevColor, IMGbuffer *img, KDtree *kdt, double prob = 1.)
 {
-    if (prevColor.L_inf() < eps)
+    if (prevColor.L_inf() < eps || depth > 10)
         return;
 
     Hit hit;
@@ -107,7 +105,7 @@ void sppmForward(const Object *scene, const Ray &ray, int depth, const Vec3 &pre
     int into = 0;
     Texture *texture = hit.texture();
     Vec3 inter = ray.pointAt(hit.t());
-    auto feature = getFeature(*texture, inter);
+    auto feature = texture->getFeature();
     Vec3 color = feature.second;
     Vec3 normal = hit.normal(), nl = normal;
 
@@ -137,10 +135,20 @@ void sppmForward(const Object *scene, const Ray &ray, int depth, const Vec3 &pre
     if (feature.first == Texture::Reflect_t::DIFF)
     {
         kdt->query(SPPMNode(inter, prevColor, nl), img);
-        double r1 = 2 * PI * rand01(), r2 = rand01(), r2s = sqrt(r2);
-        Vec3 u = (abs(nl.x()) > 1. ? Vec3(0., 1., 0.) : Vec3(1., 0., 0.)).cross(nl).normalized();
-        Vec3 v = nl.cross(u);
-        Vec3 dir = (u * cos(r1) * r2s + v * sin(r1) * r2s + nl * sqrt(1 - r2)).normalized();
+
+        Vec3 dir;
+        do
+        {
+            double rr = 1.2, x1 = 0, x2 = 0;
+            do
+            {
+                x1 = rand01() * 2. - 1.;
+                x2 = rand01() * 2. - 1.;
+                rr = sqr(x1) + sqr(x2);
+            } while (rr >= 1.);
+            dir = Vec3(2. * x1 * sqrt(1 - rr), 2. * x2 * sqrt(1 - rr), 1 - 2. * rr);
+        } while (dir.dot(nl) <= 0.);
+
         return sppmForward(scene, Ray(inter, dir), depth + 1, prevColor * color, img, kdt, prob);
     }
     else
