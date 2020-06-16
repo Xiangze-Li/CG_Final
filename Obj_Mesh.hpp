@@ -12,11 +12,13 @@ class Mesh : public Object
 private:
     std::vector<Object *> _triangles;
     BVH_Node *bvhTree;
+    Vec3 _ori;
+    double _magn;
 
     inline void loadFromFile(const char *filename);
 
 public:
-    Mesh(const char *filename, Texture *texture)
+    Mesh(const char *filename, const Vec3 &ori, double magn, Texture *texture) : Object(texture), _ori(ori), _magn(magn)
     {
         loadFromFile(filename);
         bvhTree = new BVH_Node(_triangles.data(), _triangles.size());
@@ -26,22 +28,14 @@ public:
         delete bvhTree;
     }
 
-    bool intersect(const Ray &ray, Hit &hit) const override { return bvhTree->intersect(ray, hit); }
+    bool intersect(const Ray &ray, Hit &hit) const override
+    {
+        return bvhTree->intersect(ray, hit);
+    }
 
     AABBcord AABB() const override { return bvhTree->AABB(); }
 };
 
-/* inline bool Mesh::intersect(const Ray &ray, Hit &hit) const
-{
-    // OPTIMIZE: Acceleration
-    bool result = false;
-    for (const auto &tri : _triangles)
-    {
-        result |= tri->intersect(ray, hit);
-    }
-    return result;
-}
- */
 inline void Mesh::loadFromFile(const char *filename)
 {
     std::ifstream f;
@@ -80,7 +74,7 @@ inline void Mesh::loadFromFile(const char *filename)
         {
             double vec[3];
             ss >> vec[0] >> vec[1] >> vec[2];
-            _vtxs.emplace_back(vec[0], vec[1], vec[2]);
+            _vtxs.push_back(Vec3(vec[0], vec[1], vec[2]) * _magn + _ori);
         }
         else if (tok == fTok)
         {
