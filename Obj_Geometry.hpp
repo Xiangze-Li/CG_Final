@@ -5,9 +5,6 @@
 #include <vector>
 #include <algorithm>
 
-// bool intersect(const Ray &ray, Hit &hit) const override
-// std::pair<Vec3, Vec3> AABB() const override
-
 class Sphere : public Object
 {
 private:
@@ -54,13 +51,16 @@ public:
     {
         double rr = Vec3::dot(_normal, ray.dir());
 
-        if (abs(rr) < eps)
-            return false;
-
-        double tt = ((_d - rr) / rr);
+        double tt = ((-_d - _normal.dot(ray.ori())) / rr);
 
         if (tt < 0 || tt >= hit.t())
             return false;
+
+        // 希望这样能够解决自遮挡问题
+        while (rr * (_normal.dot(ray.pointAt(tt)) + _d) > -eps)
+        {
+            tt -= eps;
+        }
 
         return hit.set(tt, _texture, _normal.normalized());
     }
@@ -111,95 +111,40 @@ public:
     // Slab-based algorithm for box
     bool intersect(const Ray &ray, Hit &hit) const override
     {
-        double Ox = ray.ori().x(), Oy = ray.ori().y(), Oz = ray.ori().z();
-        double Dx = ray.dir().x(), Dy = ray.dir().y(), Dz = ray.dir().z();
-
-        double t_x0, t_x1, t_y0, t_y1, t_z0, t_z1;
-        double near[3], far[3];
-        bool closer[3];
-
-        if (abs(Dx) < eps)
+        double tmin = -eps, tmax = INF;
+        for (size_t DIM = 0; DIM < 3; DIM++)
         {
-            if (Ox < _p0.x() || _p1.x() < Ox)
+            double invD = 1. / ray.dir()[DIM];
+            double t0 = (_p0[DIM] - ray.ori()[DIM]) * invD;
+            double t1 = (_p1[DIM] - ray.ori()[DIM]) * invD;
+            if (invD < 0.)
+                std::swap(t0, t1);
+
+            tmin = t0 > tmin ? t0 : tmin;
+            tmax = t1 < tmax ? t1 : tmax;
+            if (tmax <= tmin)
                 return false;
-
-            near[0] = -INF;
-            far[0] = INF;
-        }
-        else
-        {
-            t_x0 = (_p0.x() - Ox) / Dx;
-            t_x1 = (_p1.x() - Ox) / Dx;
-            near[0] = ((t_x0 < t_x1 ? t_x0 : t_x1));
-            far[0] = ((t_x0 < t_x1 ? t_x1 : t_x0));
-            closer[0] = (t_x0 < t_x1 ? true : false);
         }
 
-        if (abs(Dy) < eps)
-        {
-            if (Oy < _p0.y() || _p1.y() < Oy)
-                return false;
-
-            near[1] = -INF;
-            far[1] = INF;
-        }
-        else
-        {
-            t_y0 = (_p0.y() - Oy) / Dy;
-            t_y1 = (_p1.y() - Oy) / Dy;
-            near[1] = ((t_y0 < t_y1 ? t_y0 : t_y1));
-            far[1] = ((t_y0 < t_y1 ? t_y1 : t_y0));
-            closer[1] = (t_y0 < t_y1 ? true : false);
-        }
-
-        if (abs(Dz) < eps)
-        {
-            if (Oz < _p0.z() || _p1.z() < Oz)
-                return false;
-
-            near[2] = -INF;
-            far[2] = INF;
-        }
-        else
-        {
-            t_z0 = (_p0.z() - Oz) / Dz;
-            t_z1 = (_p1.z() - Oz) / Dz;
-            near[2] = ((t_z0 < t_z1 ? t_z0 : t_z1));
-            far[2] = ((t_z0 < t_z1 ? t_z1 : t_z0));
-            closer[2] = (t_z0 < t_z1 ? true : false);
-        }
-
-        double tFar = *std::min_element(far, far + 2);
-        int idxNear = std::max_element(near, near + 2) - near;
-        double tNear = near[idxNear];
-
-        if (tFar - tNear < eps || tNear < 0 || tNear >= hit.t())
+        if (tmin < 0 || tmin >= hit.t())
             return false;
 
-        Vec3 norm;
-        if (idxNear == 0)
+        Vec3 norm(0.), inter(ray.pointAt(tmin));
+        for (size_t DIM = 0; DIM < 3; DIM++)
         {
-            if (closer[0])
-                norm = Vec3(-1, 0, 0);
-            else
-                norm = Vec3(1, 0, 0);
+            if (abs(_p0[DIM] - inter[DIM]) < eps)
+            {
+                norm[DIM] = -1;
+                break;
+            }
+            else if (abs(_p1[DIM] - inter[DIM]) < eps)
+            {
+                norm[DIM] = 1;
+                break;
+            }
         }
-        else if (idxNear == 1)
-        {
-            if (closer[1])
-                norm = Vec3(0, -1, 0);
-            else
-                norm = Vec3(0, 1, 0);
-        }
-        else if (idxNear == 2)
-        {
-            if (closer[2])
-                norm = Vec3(0, 0, -1);
-            else
-                norm = Vec3(0, 0, 1);
-        }
-
-        return hit.set(tNear, _texture, norm);
+        assert(norm.squaredLen() > eps);
+        return hit.set(tmin, _texture, norm);
     }
 
     AABBcord AABB() const override { return std::make_tuple(_p0 - Vec3(eps), _p1 + Vec3(eps), (_p0 + _p1) / 2.); }
@@ -231,19 +176,24 @@ public:
     bool intersect(const Ray &ray, Hit &hit) const override
     {
         double rr = Vec3::dot(_normal, ray.dir());
+        // if (abs(rr) < eps)
+        //     return false;
 
-        if (abs(rr) < eps)
-            return false;
-
-        double tt = ((_d - rr) / rr);
+        double tt = ((-_d - _normal.dot(ray.ori())) / rr);
 
         if (tt < 0 || tt >= hit.t())
             return false;
 
-        if (inside(ray.pointAt(tt)))
-            return hit.set(tt, _texture, _normal);
-        else
+        if (!inside(ray.pointAt(tt)))
             return false;
+
+        // 希望这样能够解决自遮挡问题
+        while (rr * (_normal.dot(ray.pointAt(tt)) + _d) > -eps)
+        {
+            tt -= eps;
+        }
+
+        return hit.set(tt, _texture, _normal);
     }
 
     AABBcord AABB() const override
