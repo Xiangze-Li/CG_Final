@@ -1,12 +1,12 @@
 To Test:
-    [ ] Obj 模型 @created(20-06-15 20:20)
-    [ ] 贴图 @created(20-06-15 20:20)
+    [X] Obj 模型 @created(20-06-15 20:20) @done(20-06-16 18:43)
+    [-] 贴图 @created(20-06-15 20:20) @cancelled(20-06-16 18:43)
 
 Debug:
-    [ ] 平面 Plane @created(20-06-15 20:19)
-    [ ] 镜面材质 SPEC? @created(20-06-15 20:19)
+    [X] 平面 Plane @created(20-06-15 20:19) @done(20-06-16 18:43)
+    [X] 镜面材质 SPEC? @created(20-06-15 20:19) @done(20-06-16 18:43)
     [ ] 或者是立方体 Cube @created(20-06-15 20:25)
-    [ ] 折射次数 @created(20-06-15 20:19)
+    [-] 折射次数 @created(20-06-15 20:19) @cancelled(20-06-16 18:43)
 
 Archive:
     [X] @critical 在Mesh内部实现AABB加速 @created(20-06-12 17:08) @started(20-06-14 08:00) @done(20-06-14 11:39) @lasted(3h39m10s) @project(AABB)

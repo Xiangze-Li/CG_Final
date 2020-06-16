@@ -19,20 +19,16 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
-/*int main()
-{
-    Hit hit;
-    auto& group = scene.group();
-    auto ray = scene.camera().generateRay(320, 240);
-    bool result = group.intersect(ray, hit);
-    return 0;
-}*/
+SceneParser &scene = dragon;
 
 int main(int argc, char **argv)
 {
+    // Mesh m("obj_models/bunny.fine.obj", Vec3(0,-7.5,0), 250., nullptr);
+    // return 0;
+
     system("date");
     int ITER = 5;
-    double SAMPLE = 50., RADIUS = 2., ALPHA = 0.8;
+    double SAMPLE = 1500., RADIUS = 2.0, ALPHA = 0.75;
 
     if (argc != 1 && argc != 5)
     {
@@ -57,6 +53,8 @@ int main(int argc, char **argv)
     int WIDTH = camera.width(), HEIGHT = camera.height();
     SAMPLE *= WIDTH * HEIGHT;
 
+    cerr << "Rendering \"" << scene.name() << "\". " << endl;
+
     int thrNum = omp_get_num_procs();
     cerr << "Using " << thrNum << " core(s)." << endl;
 
@@ -71,6 +69,7 @@ int main(int argc, char **argv)
         //KDtree tree;
         // if (iter < 3 || iter % 1 == 0)
         // {
+        cerr << "Begin rendering iter #" << iter << "/" << ITER << "." << endl;
 
         auto ball = new std::vector<SPPMNode>[thrNum];
 
@@ -86,7 +85,7 @@ int main(int argc, char **argv)
             int threadNo = omp_get_thread_num();
             if (threadNo == 0)
             {
-                cerr << "\rBuilding k-D tree " << std::fixed << std::setprecision(2) <<  100. * double(y) / HEIGHT << "%. ";
+                cerr << "\rBuilding k-D tree " << std::fixed << std::setprecision(2) << 100. * double(y) / HEIGHT << "%. ";
                 cerr.flush();
             }
             for (size_t x = 0; x < WIDTH; x++)
@@ -123,6 +122,8 @@ int main(int argc, char **argv)
 
         delete[] ball;
 
+        cerr << "Spreading " << int(SAMPLE) << " photons in total." << endl;
+
         int per = SAMPLE / thrNum + 1;
 
 #pragma omp parallel for num_threads(thrNum) schedule(dynamic, 1)
@@ -133,7 +134,7 @@ int main(int argc, char **argv)
             {
                 if (threadNo == 0 && photon % 1000 == 0)
                 {
-                    cerr << "\rSPPM tracing " << 100. * photon / per << "%.";
+                    cerr << "\rSPPM tracing " << std::setprecision(6) << 100. * photon / per << "%.";
                     cerr.flush();
                 }
                 auto l = light.generateRay();
@@ -178,5 +179,7 @@ int main(int argc, char **argv)
         }
         cerr << "Iter #" << iter << " done." << endl;
         system("date");
+        cerr << "\n\n"
+             << endl;
     }
 }
