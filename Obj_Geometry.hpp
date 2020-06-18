@@ -88,68 +88,6 @@ public:
     }
 };
 
-// Cubic objects whose edges are PARALLEL to axies (axis-aligned)
-// determined by two OPPOSING vertives p0 and p1
-class Cube : public Object
-{
-private:
-    Vec3 _p0, _p1;
-    double getPlaneIntersect(const Ray &ray, const Vec3 &pln_N, double pln_d) const
-    {
-        double rr = Vec3::dot(pln_N, ray.dir());
-        return ((pln_d - rr) / rr);
-    }
-
-public:
-    Cube(const Vec3 &p0, const Vec3 &p1, Texture *texture)
-        : Object(texture)
-    {
-        _p0 = Vec3::mergeMin(p0, p1);
-        _p1 = Vec3::mergeMax(p0, p1);
-    }
-
-    // Slab-based algorithm for box
-    bool intersect(const Ray &ray, Hit &hit) const override
-    {
-        double tmin = -eps, tmax = INF;
-        for (size_t DIM = 0; DIM < 3; DIM++)
-        {
-            double invD = 1. / ray.dir()[DIM];
-            double t0 = (_p0[DIM] - ray.ori()[DIM]) * invD;
-            double t1 = (_p1[DIM] - ray.ori()[DIM]) * invD;
-            if (invD < 0.)
-                std::swap(t0, t1);
-
-            tmin = t0 > tmin ? t0 : tmin;
-            tmax = t1 < tmax ? t1 : tmax;
-            if (tmax <= tmin)
-                return false;
-        }
-
-        if (tmin < 0 || tmin >= hit.t())
-            return false;
-
-        Vec3 norm(0.), inter(ray.pointAt(tmin));
-        for (size_t DIM = 0; DIM < 3; DIM++)
-        {
-            if (abs(_p0[DIM] - inter[DIM]) < eps)
-            {
-                norm[DIM] = -1;
-                break;
-            }
-            else if (abs(_p1[DIM] - inter[DIM]) < eps)
-            {
-                norm[DIM] = 1;
-                break;
-            }
-        }
-        assert(norm.squaredLen() > eps);
-        return hit.set(tmin, _texture, norm);
-    }
-
-    AABBcord AABB() const override { return std::make_tuple(_p0 - Vec3(eps), _p1 + Vec3(eps), (_p0 + _p1) / 2.); }
-};
-
 class Triangle : public Object
 {
 private:
