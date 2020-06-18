@@ -1,6 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
-
-#include "SPPM.hpp"
+﻿#include "SPPM.hpp"
 #include "Image.hpp"
 #include "Ray.hpp"
 #include "Scene.hpp"
@@ -83,10 +81,11 @@ int main(int argc, char **argv)
             }
             for (size_t x = 0; x < WIDTH; x++)
             {
+                // 多重采样
                 for (size_t subY = 0; subY < 3; subY++)
                     for (size_t subX = 0; subX < 3; subX++)
                     {
-                        std::vector<SPPMNode> tmp = sppmBacktrace(&group, camera.generateRay(x + (subX - 1) + (rand01() - 0.5), y + (subY - 1) + (rand01() - 0.5)), 0, y * WIDTH + x);
+                        std::vector<SPPMNode> tmp = sppmBacktrace(&group, camera.generateRay(x + (subX - 1) / 2. + (rand01() - 0.5), y + (subY - 1) / 2. + (rand01() - 0.5)), 0, y * WIDTH + x);
                         for (auto &nn : tmp)
                             if (nn.index > 0)
                             {
