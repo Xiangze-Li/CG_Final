@@ -16,16 +16,6 @@ public:
     virtual Vec3 color() const { return _color; }
 };
 
-class DirectionalLight : public Light
-{
-private:
-    Vec3 _ori, _dir;
-
-public:
-    DirectionalLight(const Vec3 &ori, const Vec3 &dir, const Vec3 &color = Vec3(1.2)) : Light(color), _ori(ori), _dir(dir) {}
-    Ray generateRay() const override { return Ray(_ori, _dir); }
-};
-
 class PointLight : public Light
 {
 private:

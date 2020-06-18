@@ -19,27 +19,23 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
-SceneParser &scene = dragon;
+SceneParser &scene = spheres;
 
 int main(int argc, char **argv)
 {
-    // Mesh m("obj_models/bunny.fine.obj", Vec3(0,-7.5,0), 250., nullptr);
-    // return 0;
-
-    system("date");
-    int ITER = 5;
-    double SAMPLE = 1500., RADIUS = 2.0, ALPHA = 0.75;
+    int EPOCH = 1;
+    double SAMPLE = 200., RADIUS = 1.0, ALPHA = 0.5;
 
     if (argc != 1 && argc != 5)
     {
         cout << "Usage: \n\n"
-             << "\t<EXCUTABLE> iter sample radius alpha\n"
+             << "\t<EXCUTABLE> epoch sample radius alpha\n"
              << endl;
         return 1;
     }
     else if (argc == 5)
     {
-        ITER = atoi(argv[1]);
+        EPOCH = atoi(argv[1]);
         SAMPLE = atof(argv[2]);
         RADIUS = atof(argv[3]);
         ALPHA = atof(argv[4]);
@@ -64,16 +60,13 @@ int main(int argc, char **argv)
     IMGbuffer *imgFinal = new IMGbuffer[WIDTH * HEIGHT];
     IMGbuffer *imgNow = new IMGbuffer[WIDTH * HEIGHT];
 
-    for (int iter = 1; iter <= ITER; iter++)
+    for (int epoch = 1; epoch <= EPOCH; epoch++)
     {
-        //KDtree tree;
-        // if (iter < 3 || iter % 1 == 0)
-        // {
-        cerr << "Begin rendering iter #" << iter << "/" << ITER << "." << endl;
+        cerr << "Begin rendering epoch #" << epoch << "/" << EPOCH << "." << endl;
 
         auto ball = new std::vector<SPPMNode>[thrNum];
 
-        if (iter > 1)
+        if (epoch > 1)
         {
             SAMPLE /= sqrt(ALPHA);
             RADIUS *= ALPHA;
@@ -93,12 +86,6 @@ int main(int argc, char **argv)
                 for (size_t subY = 0; subY < 2; subY++)
                     for (size_t subX = 0; subX < 2; subX++)
                     {
-                        // double r1 = 2 * rand01(), dx = r1 < 1 ? sqrt(r1) : 2 - sqrt(r1);
-                        // double r2 = 2 * rand01(), dy = r2 < 1 ? sqrt(r2) : 2 - sqrt(r2);
-                        // Vec3 dir = camX * ((dx / 2. + x + subX) / WIDTH - 0.5) +
-                        //            camY * ((dy / 2. + y + subY) / HEIGHT - 0.5) + camera.dir();
-                        // Vec3 pp = camera.ori() + dir * 150., loc = camera.ori() + (Vec3(rand01() * 1.05, rand01() - .5, 0.) * 2 * APERTURE);
-
                         std::vector<SPPMNode> tmp = sppmBacktrace(&group, camera.generateRay(x + subX, y + subY), 0, y * WIDTH + x);
                         for (auto &nn : tmp)
                             if (nn.index > 0)
@@ -118,7 +105,6 @@ int main(int argc, char **argv)
         //tree.init(total);
         cerr << "Done!" << endl;
         cerr << "Built a k-D tree with " << total.size() << " points. " << endl;
-        system("date");
 
         delete[] ball;
 
@@ -161,24 +147,20 @@ int main(int argc, char **argv)
         for (int i = HEIGHT * WIDTH - 1; i >= 0; i--)
             imgFinal[i] += imgNow[i] / imgNow[i].cntr;
 
-        if (iter == 1 || iter % 1 == 0)
-        {
-            char sout[100];
-            sprintf(sout, "%s__%03d.ppm", scene.name().c_str(), iter);
-            FILE *f = fopen(sout, "w");
-            fprintf(f, "P3\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
-            for (int y = HEIGHT - 1; y >= 0; --y)
-                for (int x = WIDTH - 1; x >= 0; --x)
-                {
-                    fprintf(f, "%d %d %d\n",
-                            gamma_trans(imgFinal[y * WIDTH + x].getColor().x()),
-                            gamma_trans(imgFinal[y * WIDTH + x].getColor().y()),
-                            gamma_trans(imgFinal[y * WIDTH + x].getColor().z()));
-                }
-            fclose(f);
-        }
-        cerr << "Iter #" << iter << " done." << endl;
-        system("date");
+        char sout[100];
+        sprintf(sout, "output/%s__%03d.ppm", scene.name().c_str(), epoch);
+        FILE *f = fopen(sout, "w");
+        fprintf(f, "P3\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
+        for (int y = HEIGHT - 1; y >= 0; --y)
+            for (int x = WIDTH - 1; x >= 0; --x)
+            {
+                fprintf(f, "%d %d %d\n",
+                        gamma_trans(imgFinal[y * WIDTH + x].getColor().x()),
+                        gamma_trans(imgFinal[y * WIDTH + x].getColor().y()),
+                        gamma_trans(imgFinal[y * WIDTH + x].getColor().z()));
+            }
+        fclose(f);
+        cerr << "Epoch #" << epoch << " done." << endl;
         cerr << "\n\n"
              << endl;
     }

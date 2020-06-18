@@ -24,10 +24,6 @@ struct KDtreeNode
     int child[2];
     KDtreeNode() : sppm(), child{0, 0} {}
     KDtreeNode(const SPPMNode &sppm_) : sppm(sppm_), child{0, 0} {}
-    // bool operator<(const KDtreeNode &r) const
-    // {
-    //     return this->sppm.pos[KDtree::currentDim] < r.sppm.pos[KDtree::currentDim];
-    // }
 };
 
 class KDtree
@@ -84,23 +80,6 @@ private:
         if ((nodes[ori].sppm.pos - node.pos).squaredLen() <= sqr(nodes[ori].sppm.r) &&
             nodes[ori].sppm.dir.dot(node.dir) >= 0)
             img[nodes[ori].sppm.index].add(node.color * nodes[ori].sppm.color, node.prob);
-
-        // double d[2];
-        // if (nodes[ori].child[0] > 0)
-        //     d[0] = insideAAB(node.pos, nodes[nodes[ori].child[0]].m[0], nodes[nodes[ori].child[0]].m[1]);
-        // else
-        //     d[0] = INF;
-        // if (nodes[ori].child[1] > 0)
-        //     d[1] = insideAAB(node.pos, nodes[nodes[ori].child[1]].m[0], nodes[nodes[ori].child[1]].m[1]);
-        // else
-        //     d[1] = INF;
-
-        // int tmp = d[0] >= d[1];
-        // if (d[tmp] < eps)
-        //     query(node, img, nodes[ori].child[tmp]);
-        // tmp ^= 1;
-        // if (d[tmp] < eps)
-        //     query(node, img, nodes[ori].child[tmp]);
 
         if (nodes[ori].child[0] > 0 && insideAAB(node.pos, nodes[nodes[ori].child[0]].m[0], nodes[nodes[ori].child[0]].m[1]))
             query(node, img, nodes[ori].child[0]);
