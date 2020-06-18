@@ -57,7 +57,7 @@ std::vector<SPPMNode> sppmBacktrace(const Object *scene, const Ray &ray, int dep
     case Texture::Reflect_t::REFR:
     {
         Vec3 refractDir = ray.dir().refract(normal, into ? 1. : texture->brdf(), into ? texture->brdf() : 1.);
-        Ray refractRay = Ray(inter - (nl.normalized() / 0.001), refractDir);
+        Ray refractRay = Ray(inter - (nl.normalized() * 0.005), refractDir);
         if (refractDir.squaredLen() < eps) //
             return sppmBacktrace(scene, reflectRay, depth + 1, index, prevColor * color, prob);
 

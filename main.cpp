@@ -19,7 +19,7 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
-SceneParser &scene = spheres;
+SceneParser &scene = dinosaur2;
 
 int main(int argc, char **argv)
 {
@@ -83,10 +83,10 @@ int main(int argc, char **argv)
             }
             for (size_t x = 0; x < WIDTH; x++)
             {
-                for (size_t subY = 0; subY < 2; subY++)
-                    for (size_t subX = 0; subX < 2; subX++)
+                for (size_t subY = 0; subY < 3; subY++)
+                    for (size_t subX = 0; subX < 3; subX++)
                     {
-                        std::vector<SPPMNode> tmp = sppmBacktrace(&group, camera.generateRay(x + subX, y + subY), 0, y * WIDTH + x);
+                        std::vector<SPPMNode> tmp = sppmBacktrace(&group, camera.generateRay(x + (subX - 1) + (rand01() - 0.5), y + (subY - 1) + (rand01() - 0.5)), 0, y * WIDTH + x);
                         for (auto &nn : tmp)
                             if (nn.index > 0)
                             {

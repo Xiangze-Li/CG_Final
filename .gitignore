@@ -9,6 +9,5 @@
 /CG_Final.vcxproj
 /CG_Final.sln
 /Debug
-/*.ppm
-/*.png
 ref.pdf
+/output/*.ppm
